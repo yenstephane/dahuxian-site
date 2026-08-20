@@ -102,7 +102,8 @@
   <label class="ck" title="近5/10日法人賣超日的量加權成本線(位置參考,不參與訊號)"><input type="checkbox" id="dp">D壓力線</label>
   <label class="ck" title="近5/10日法人買超日的量加權成本線(位置參考,不參與訊號)"><input type="checkbox" id="ds">D支撐線</label>
   <label class="ck" title="20/60/120 日簡單移動平均(還原收盤價)"><input type="checkbox" id="ma" checked>均線 20/60/120</label>
-  <label class="ck" title="近2個法人賣超(買超)日的量加權成本棘輪(原名韋式快訊線);價格在線下(上)連續≥4根後,收盤站上壓線/跌破支線=快訊。以CPO族群2026-07-22五檔校準:4/5正中、1檔晚一日。僅顯示參考,不進回測、不影響引擎訊號"><input type="checkbox" id="wx">法人線</label>
+  <label class="ck" title="B v2 引擎的價格階梯與 ±1×ATR14 帶;隱藏只影響圖層,訊號引擎照常運作"><input type="checkbox" id="stair" checked>B版階梯</label>
+  <label class="ck" title="v2 翻面階梯(2026-08-21 以韋氏 13 檔錨點校準):支2=基準、支1=基準×級距;收盤跌破基準→翻面為壓力層(×1.002267,壓1近/壓2遠)並保留下層;反彈日重錨、間距壓縮;收盤站上壓力層=收復快訊。壓力恆在支撐之上。級距個股對照(聯亞/國巨/華新科1.8685%、台積/樺漢等2.8845%、預設4.0009%)。僅顯示參考,不進回測、不影響引擎訊號"><input type="checkbox" id="wx">法人線</label>
   <details style="font-size:12px;color:#9a9a9a"><summary>FinMind token(選填)</summary><input id="tok" type="password" placeholder="貼上 token(以官方 token= 參數傳送)"> <label class="ck" style="display:inline-flex"><input type="checkbox" id="tokSave">記住(僅存你這台瀏覽器)</label></details><a id="idxBtn" href="#" style="margin-left:6px;background:#1a1a22;border:1px solid #3a3a55;color:#9ecbff;border-radius:8px;padding:4px 10px;font-size:12.5px;cursor:pointer;text-decoration:none">📈 大盤儀表板</a>
   <span id="stamp" style="font-size:11px;color:#777"></span>
 </header>
@@ -416,31 +417,33 @@ function adjust(bars,divs,crs,notes){
  return bars;}
 
 
-function weiLines(bars,netMap){
- var n=bars.length,rows=[],i,j;
- for(i=0;i<n;i++){var nv=netMap[bars[i].d];
-  rows.push({has:nv!==undefined,net:nv||0,p:(bars[i].o+bars[i].h+bars[i].l+bars[i].c)/4});}
- function cost(i,side){var s=0,w=0,cnt=0;
-  for(j=i;j>=0&&cnt<2;j--){if(!rows[j].has)continue;var x=rows[j].net;
-   if(side===1?x>0:x<0){var a=Math.abs(x);s+=a*rows[j].p;w+=a;cnt++;}}
-  return w>0?s/w:NaN;}
- var P=new Array(n).fill(NaN),S=new Array(n).fill(NaN),dP=new Array(n).fill(false),dS=new Array(n).fill(false);
- var buy=[],sell=[],runP=0,runS=0;
- var c=bars.map(function(b){return b.c});
- for(i=0;i<n;i++){
-  var p2=cost(i,-1),s2=cost(i,1);
-  if(i===0||isNaN(P[i-1])){P[i]=p2;}
-  else{var below=c[i-1]<P[i-1];
-   P[i]=isNaN(p2)?P[i-1]:(below?Math.min(P[i-1],p2):p2);
-   if(below){dP[i]=true;runP++;if(runP>=4&&!isNaN(P[i])&&c[i]>P[i])buy.push(i);}else runP=0;}
-  if(i>0&&isNaN(P[i]))P[i]=P[i-1];
-  if(i===0||isNaN(S[i-1])){S[i]=s2;}
-  else{var above=c[i-1]>S[i-1];
-   S[i]=isNaN(s2)?S[i-1]:(above?Math.max(S[i-1],s2):s2);
-   if(above){dS[i]=true;runS++;if(runS>=4&&!isNaN(S[i])&&c[i]<S[i])sell.push(i);}else runS=0;}
-  if(i>0&&isNaN(S[i]))S[i]=S[i-1];
+function weiLines(bars,netMap,sid){
+ // v2 翻面階梯(2026-08-21):支2=基準B、支1=B×間距;收盤跌破B→兩層×1.002267翻為壓力層(壓1近/壓2遠),B清空;
+ // 反彈日重錨B=收盤/級距(間距壓縮為1.002267);收盤越過支1且近2日法人買超→升級B=收盤/級距(間距回復級距);
+ // 收盤站上壓力層→該層移除(快訊)。級距:個股對照表,預設4.0009%。
+ var GK={'3081':1.018685,'2327':1.018685,'2492':1.018685,'2330':1.028845,'6414':1.028845,'4979':1.028845,'2337':1.028845,'4991':1.028845,'2455':1.028845};
+ var g=GK[sid]||1.040009,EPS=1.002267,n=bars.length;
+ function A(){return new Array(n).fill(NaN)}
+ var S1=A(),S2=A(),R1=A(),R2=A(),buy=[],sell=[];
+ var B=null,sp=g,flips=[];
+ function net(i){if(i<0)return 0;var v=netMap[bars[i].d];return v==null?0:v;}
+ for(var i=0;i<n;i++){var c=bars[i].c;
+  var m0=flips.length;
+  flips=flips.filter(function(v){return c<v;});
+  if(flips.length<m0)buy.push(i);
+  if(B===null){
+   if(c<(flips.length?flips[0]:Infinity)&&(net(i)>0||(i>0&&c>bars[i-1].c))){B=c/g;sp=EPS;}
+  }else if(c<B){
+   flips.push(B*EPS);flips.push(B*sp*EPS);
+   flips=flips.filter(function(v){return c<v;});
+   flips.sort(function(a,b){return a-b});flips=flips.slice(0,2);
+   sell.push(i);B=null;
+  }else if(flips.length===0&&c>B*sp&&(net(i)>0||net(i-1)>0)){B=c/g;sp=g;}
+  if(B!=null){S2[i]=B;if(c>=B*sp)S1[i]=B*sp;}
+  if(flips.length>0)R1[i]=flips[0];
+  if(flips.length>1)R2[i]=flips[1];
  }
- return{P:P,S:S,dP:dP,dS:dS,buy:buy,sell:sell};}
+ return{S1:S1,S2:S2,R1:R1,R2:R2,buy:buy,sell:sell,g:g};}
 
 function dlines(bars,craw,netMap){
  var rows=[],idx=[];
@@ -496,7 +499,7 @@ async function query(sid,sname){
  var D=calc(bars);
  var cl=chipLines(bars,netMap);
  var dl=dlines(bars,craw,netMap);
- var wei=weiLines(bars,netMap);
+ var wei=weiLines(bars,netMap,sid);
  cur={sid:sid,name:sname,bars:bars,D:D,cl:cl,dl:dl,wei:wei,net:netMap,notes:notes,rawClose:rawClose,mr:mrD,fs:fsD,_res:null};
  view.v1=D.n;view.v0=Math.max(0,D.n-126);
  lastFetch=Date.now();
@@ -577,8 +580,8 @@ function render(){
  $('cSig').textContent=sig;$('cSig').className='big '+cls;$('cSigSub').textContent=sub;
  if(cur.wei&&$('wx')&&$('wx').checked){
   var wl9=cur.wei,ex9='';
-  if(wl9.buy.length&&wl9.buy[wl9.buy.length-1]===n-1)ex9='★ 法人線快訊:今日收盤站上短窗大戶線(快訊,非引擎訊號)';
-  else if(wl9.sell.length&&wl9.sell[wl9.sell.length-1]===n-1)ex9='★ 法人線快訊:今日收盤跌破短窗大戶線(快訊,非引擎訊號)';
+  if(wl9.buy.length&&wl9.buy[wl9.buy.length-1]===n-1)ex9='★ 法人線快訊:今日收盤站上壓力層→該層收復移除(非引擎訊號)';
+  else if(wl9.sell.length&&wl9.sell[wl9.sell.length-1]===n-1)ex9='★ 法人線快訊:今日收盤跌破支撐基準→翻面為壓力層(非引擎訊號)';
   if(ex9)$('cSigSub').textContent=($('cSigSub').textContent?$('cSigSub').textContent+'\n':'')+ex9;
  }
  var fu9=window.DFILT&&window.DFILT.fund.indexOf(cur.sid)>-1,fl9=window.DFILT&&window.DFILT.flow.indexOf(cur.sid)>-1;
@@ -793,8 +796,16 @@ function drawChart(){
     if(!open9){g.moveTo(xw,yw);open9=true;}else g.lineTo(xw,yw);
     g.lineTo(xw+cw,yw);}
    g.stroke();};
-  wline(WE.P,WE.dP,'#3ef94a');
-  wline(WE.S,WE.dS,'#ffd700');
+  var wl2=function(arr,color,lw){g.strokeStyle=color;g.lineWidth=lw;g.beginPath();var op7=false;
+   for(var i7=v0;i7<vE;i7++){if(arr[i7]==null||isNaN(arr[i7])){op7=false;continue;}
+    var x7=padL+(i7-v0)*cw,y7=Y(arr[i7]);
+    if(!op7){g.moveTo(x7,y7);op7=true;}else g.lineTo(x7,y7);
+    g.lineTo(x7+cw,y7);}
+   g.stroke();};
+  wl2(WE.R2,'#2a8f3a',1.1);
+  wl2(WE.R1,'#3ef94a',1.5);
+  wl2(WE.S1,'#b89b3a',1.1);
+  wl2(WE.S2,'#ffd700',1.5);
   var star=function(x,y,col){g.strokeStyle=col;g.lineWidth=1.6;g.beginPath();
    for(var k=0;k<10;k++){var r9=k%2?3:7,a9=Math.PI/2+k*Math.PI/5;
     var px9=x+r9*Math.cos(a9),py9=y-r9*Math.sin(a9);
@@ -804,7 +815,8 @@ function drawChart(){
   for(var z8=0;z8<WE.sell.length;z8++){var si9=WE.sell[z8];if(si9>=v0&&si9<vE)star(X(si9),Y(D.h[si9])-28,'#00d5ff');}
  }
 
- if(!res.noBand)for(var i3=v0;i3<v1;i3++){var L2=res.line[i3];if(L2==null)continue;
+ var stairOn=(!$('stair')||$('stair').checked);
+ if(!res.noBand&&stairOn)for(var i3=v0;i3<v1;i3++){var L2=res.line[i3];if(L2==null)continue;
   var bb=(D.atr[i3])||0,col=res.dirs[i3]===1?'255,159,26':'34,197,94';
   g.fillStyle='rgba('+col+',0.12)';
   var x2=padL+(i3-v0)*cw;
@@ -828,7 +840,7 @@ function drawChart(){
   mline(cur._ma.m20,'#f0f0f0');mline(cur._ma.m60,'#3fa7ff');mline(cur._ma.m120,'#ff4fd8');
  }
  g.lineWidth=2.2;
- var i5=v0;
+ var i5=stairOn?v0:v1;
  while(i5<v1){
   if(res.line[i5]==null){i5++;continue;}
   var d0=res.dirs[i5],j5=i5;
@@ -891,13 +903,21 @@ function xhairShow(mx2,my2,isTouch){
  tip.innerHTML='<b>'+D.dates[xi]+'</b><br>開 '+D.o[xi].toFixed(2)+'  高 '+D.h[xi].toFixed(2)+'<br>低 '+D.l[xi].toFixed(2)+'  收 <span style="color:'+(up2?'#ff6b6b':'#2edc9c')+'">'+D.c[xi].toFixed(2)+(isNaN(chg)?'':' ('+(chg>=0?'+':'')+chg.toFixed(2)+'%)')+'</span>';
  if($('ma')&&$('ma').checked&&cur._ma){var f9=function(v){return isNaN(v)?'—':v.toFixed(2)};
   tip.innerHTML+='<br><span style="color:#f0f0f0">MA20 '+f9(cur._ma.m20[xi])+'</span> <span style="color:#3fa7ff">60 '+f9(cur._ma.m60[xi])+'</span> <span style="color:#ff4fd8">120 '+f9(cur._ma.m120[xi])+'</span>';}
+ var xh9=function(v){return (v==null||isNaN(v))?'—':(+v).toFixed(2)};
+ if((!$('stair')||$('stair').checked)&&res.line&&res.line[xi]!=null){var bb9=(D.atr[xi])||0;
+  tip.innerHTML+='<br><span style="color:'+(res.dirs[xi]===1?'#ff9f1a':'#22c55e')+'">階梯 '+(+res.line[xi]).toFixed(2)+' 帶 '+(res.line[xi]-bb9).toFixed(2)+'~'+(res.line[xi]+bb9).toFixed(2)+'</span>';}
+ if($('wx')&&$('wx').checked&&cur.wei)tip.innerHTML+='<br><span style="color:#3ef94a">法人壓1 '+xh9(cur.wei.R1[xi])+'</span> <span style="color:#2a8f3a">壓2 '+xh9(cur.wei.R2[xi])+'</span> <span style="color:#ffd700">支1 '+xh9(cur.wei.S1[xi])+'</span> <span style="color:#b89b3a">支2 '+xh9(cur.wei.S2[xi])+'</span>';
+ if($('dp')&&$('dp').checked&&cur.dl)tip.innerHTML+='<br><span style="color:#ff5ca8">D壓5 '+xh9(cur.dl.p5[xi])+'</span> <span style="color:#c13fff">D壓10 '+xh9(cur.dl.p10[xi])+'</span>';
+ if($('ds')&&$('ds').checked&&cur.dl)tip.innerHTML+='<br><span style="color:#4fd8ff">D支5 '+xh9(cur.dl.s5[xi])+'</span> <span style="color:#3f7fd4">D支10 '+xh9(cur.dl.s10[xi])+'</span>';
  tip.style.display='block';
  var tw=tip.offsetWidth,lx=vx+(isTouch?22:16);if(lx+tw>G.W-G.padR-4)lx=vx-tw-(isTouch?22:16);
  tip.style.left=Math.max(2,lx)+'px';
  tip.style.top=(isTouch?Math.max(6,my2-130):Math.max(6,Math.min(my2-34,G.H-100)))+'px';
- var b2=(D.atr[xi])||0,L3=res.line[xi];
- $('readout').textContent=D.dates[xi]+'  開'+D.o[xi].toFixed(2)+' 高'+D.h[xi].toFixed(2)+' 低'+D.l[xi].toFixed(2)+' 收'+D.c[xi].toFixed(2)
-  +(L3!=null?('|階梯 '+L3.toFixed(2)+' 帶['+(L3-b2).toFixed(2)+'~'+(L3+b2).toFixed(2)+']'+(res.dirs[xi]===1?' 多方':' 空方')):'');}
+ var b2=(D.atr[xi])||0,L3=res.line[xi],sOn9=(!$('stair')||$('stair').checked);
+ var ro9=D.dates[xi]+'  開'+D.o[xi].toFixed(2)+' 高'+D.h[xi].toFixed(2)+' 低'+D.l[xi].toFixed(2)+' 收'+D.c[xi].toFixed(2)
+  +((sOn9&&L3!=null)?('|階梯 '+L3.toFixed(2)+' 帶['+(L3-b2).toFixed(2)+'~'+(L3+b2).toFixed(2)+']'+(res.dirs[xi]===1?' 多方':' 空方')):'');
+ if($('wx')&&$('wx').checked&&cur.wei){var xr9=function(v){return (v==null||isNaN(v))?'—':v.toFixed(2)};ro9+='|法人 壓1 '+xr9(cur.wei.R1[xi])+' 壓2 '+xr9(cur.wei.R2[xi])+' 支1 '+xr9(cur.wei.S1[xi])+' 支2 '+xr9(cur.wei.S2[xi]);}
+ $('readout').textContent=ro9;}
 function bindChart(){
  var cv=$('chart');
  cv.onmousedown=function(ev){if(!cur)return;dragSt={x0:ev.clientX,v0:view.v0};cv.classList.add('grab');ev.preventDefault();};
@@ -994,6 +1014,7 @@ $('modeSeg').querySelectorAll('span').forEach(function(el){
  el.onclick=function(){setMode(el.dataset.m);if(cur)render();};});
 $('e3').onchange=function(){if(cur)render();};
 $('wx').onchange=function(){if(cur)render()};
+if($('stair'))$('stair').onchange=function(){if(cur)render()};
 $('w2').onchange=function(){if(cur)render()};
 $('dp').onchange=function(){if(cur)drawChart()};
 $('ds').onchange=function(){if(cur)drawChart()};
