@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta name="robots" content="noindex,nofollow">
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>大戶線操盤台|109 檔・統一 B v2</title>
+<style>
+  :root{--bg:#0a0a0a;--panel:#111;--line:#2a2a2a;--tx:#e8e8e8;--dim:#9a9a9a;--up:#ec4a4a;--dn:#16b981;--sup:#ff9f1a;--pre:#22c55e;--gold:#ffd37a}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.55 "Noto Sans TC","Microsoft JhengHei",sans-serif}
+  header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);background:#0d0d0d;position:sticky;top:0;z-index:5}
+  header h1{font-size:16px;margin:0 8px 0 0;color:#fff}
+  button{background:#c8501e;border:0;color:#fff;border-radius:8px;padding:8px 18px;font-size:14px;cursor:pointer}
+  button:hover{filter:brightness(1.15)}
+  label.ck{color:var(--dim);font-size:12.5px;display:flex;align-items:center;gap:4px;cursor:pointer}
+  #msg{padding:8px 16px;color:#ffb4b4;font-size:13px;white-space:pre-wrap}
+  .seg{display:inline-flex;border:1px solid #333;border-radius:9px;overflow:hidden}
+  .seg span{padding:6px 13px;font-size:12.5px;color:#aaa;cursor:pointer;background:#151515}
+  .seg span.on{background:#c8501e;color:#fff}
+  #watch{padding:6px 16px 2px;max-height:148px;overflow-y:auto;border-bottom:1px solid #171717;background:#0c0c0c}
+  .ghead{font-size:11.5px;margin:4px 8px 2px 0;display:inline-block;font-weight:600}
+  .stk{display:inline-block;margin:2px 5px 2px 0;padding:3px 9px;background:#141414;border:1px solid #2c2c2c;border-radius:12px;cursor:pointer;font-size:12.3px;color:#ccc;white-space:nowrap}
+  .stk:hover{filter:brightness(1.35)}
+  .stk.on{font-weight:700;border-color:#ffd37a!important;box-shadow:0 0 0 1.5px #ffd37a;background:#241d08!important}
+  #vband{margin:10px 16px 0;padding:8px 12px;background:#101010;border:1px solid #232323;border-left:4px solid #666;border-radius:8px;font-size:13px;line-height:1.6;display:none}
+  #vband b{color:#fff}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;padding:12px 16px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .card h3{margin:0 0 6px;font-size:12px;color:var(--dim);font-weight:500}
+  .card .big{font-size:19px;font-weight:700}
+  .card .sub{font-size:12px;color:var(--dim);margin-top:3px;white-space:pre-line}
+  .long{color:var(--sup)}.short{color:var(--pre)}
+  .sig-buy{color:#ff6b6b}.sig-sell{color:#2edc9c}.sig-none{color:#bbb}.sig-warn{color:#ffcf1a}
+  #chartwrap{padding:4px 16px 0}
+  #viewbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:var(--dim);padding:2px 2px 6px}
+  #viewbar .vb{padding:3px 11px;background:#161616;border:1px solid #2e2e2e;border-radius:11px;cursor:pointer;color:#bbb}
+  #viewbar .vb:hover{border-color:#c8501e}
+  #viewbar .vb.on{background:#3a2213;border-color:#c8501e;color:#ffd37a}
+  #range{margin-left:auto;color:#8f8f8f}
+  #readout{height:20px;font-size:12px;color:var(--dim);padding:0 2px}
+  canvas{width:100%;display:block;background:#000;border:1px solid var(--line);border-radius:10px}
+  #legend{font-size:12px;color:var(--dim);padding:6px 2px}
+  table{width:calc(100% - 32px);margin:10px 16px 6px;border-collapse:collapse;font-size:13px}
+  th,td{padding:6px 8px;text-align:right;border-bottom:1px solid #1e1e1e}
+  th{color:var(--dim);font-weight:500}
+  td:first-child,th:first-child{text-align:left}
+  .pos{color:#ff6b6b}.neg{color:#2edc9c}
+  footer{padding:10px 16px 22px;font-size:11.5px;color:#777}
+  .hidden{display:none}
+  .fundgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 16px 0}
+  .fpanel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .fpanel h3{margin:0 0 8px;font-size:12.5px;color:var(--dim);font-weight:500}
+  .fpanel table{width:100%;margin:8px 0 0;font-size:12.5px}
+  .fpanel td,.fpanel th{padding:4px 6px}
+  #qwrap table td:first-child{color:var(--dim)}
+  #ytdline{margin-top:8px;font-size:13px;color:var(--gold)}
+  .qy{color:var(--dim);font-size:11px}
+  @media(max-width:900px){.fundgrid{grid-template-columns:1fr}}
+  #hint{padding:7px 16px;font-size:12px;color:#8f8f8f;border-bottom:1px solid #171717;line-height:1.65;background:#0c0c0c}
+  #hint b{color:#c9c9c9;font-weight:600}
+  #cwrap{position:relative}
+  #chart{touch-action:none;-webkit-tap-highlight-color:transparent;cursor:crosshair}
+  #chart.grab{cursor:grabbing}
+  #xhair{position:absolute;left:0;top:0;background:transparent!important;border:0!important;pointer-events:none;z-index:2}
+  #tip{position:absolute;display:none;background:rgba(14,14,14,.94);border:1px solid #454545;border-radius:8px;padding:6px 10px;font-size:12px;line-height:1.55;pointer-events:none;z-index:3;color:#ddd;white-space:nowrap}
+  .lg{display:inline-flex;align-items:center;gap:5px;margin:2px 14px 2px 0;white-space:nowrap}
+  .ln{display:inline-block;width:26px;height:0;border-top:3px solid}
+  .lnd{border-top-width:2px;border-top-style:dashed}
+  .lnt{border-top-width:2px;border-top-style:dotted}
+  .sw{width:13px;height:10px;display:inline-block;border-radius:2px}
+#modeSeg{display:none!important}label:has(#e3){display:none!important}label:has(#w2){display:none!important}label:has(#dp),label:has(#ds){display:none!important}</style>
+<script>
+(function(){
+ if(localStorage.getItem('dahu_pass')==='dahu2026')return;
+ document.addEventListener('DOMContentLoaded',function(){
+  var d=document.createElement('div');d.id='dgate';
+  d.style.cssText='position:fixed;inset:0;background:#0b0f14;z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px';
+  d.innerHTML='<div style="color:#e8e2d0;font:15px/1.6 system-ui">輸入通行碼</div>'
+   +'<input id="dgpw" type="password" style="background:#141a22;border:1px solid #33405a;color:#e8e2d0;border-radius:8px;padding:8px 12px;font-size:16px;width:180px;text-align:center" autofocus>'
+   +'<button id="dgbt" style="background:#1d2836;border:1px solid #33405a;color:#ffd37a;border-radius:8px;padding:7px 26px;font-size:14px;cursor:pointer">進入</button>'
+   +'<div id="dgmsg" style="color:#7d8aa0;font-size:12px;height:14px"></div>';
+  document.body.appendChild(d);
+  function go(){var v=document.getElementById('dgpw').value;
+   if(v==='dahu2026'){localStorage.setItem('dahu_pass','dahu2026');d.remove();}
+   else document.getElementById('dgmsg').textContent='通行碼錯誤';}
+  document.getElementById('dgbt').addEventListener('click',go);
+  document.getElementById('dgpw').addEventListener('keydown',function(e){if(e.key==='Enter')go();});
+ });
+})();
+</script>
+</head>
+<body>
+<header>
+  <h1>大戶線操盤台</h1>
+  <input id="q" type="text" placeholder="代碼或名稱(任意台股)" autocomplete="off" style="width:170px;background:#151515;border:1px solid #333;color:#eee;border-radius:8px;padding:7px 10px;font-size:13px">
+  <button id="goq">查詢</button>
+  <span class="seg" id="modeSeg"><span data-m="B">B 版階梯</span><span data-m="BC">BC 籌碼階梯</span><span data-m="W">W 法人線</span></span>
+  <label class="ck" title="翻多訊號需 ADX14>20 才進場;不足先不進、等轉強再補。依各股回測裁決自動勾選"><input type="checkbox" id="e3">E3 進場門檻</label>
+  <label class="ck" title="僅 W 法人線模式適用:連續2日收盤站上/跌破才出訊號(=W2,回測較穩);取消勾選=單日訊號(W)。B/BC 模式不受影響"><input type="checkbox" id="w2" checked>W連2日確認</label>
+  <label class="ck" title="近5/10日法人賣超日的量加權成本線(位置參考,不參與訊號)"><input type="checkbox" id="dp">D壓力線</label>
+  <label class="ck" title="近5/10日法人買超日的量加權成本線(位置參考,不參與訊號)"><input type="checkbox" id="ds">D支撐線</label>
+  <label class="ck" title="20/60/120 日簡單移動平均(還原收盤價)"><input type="checkbox" id="ma" checked>均線 20/60/120</label>
+  <label class="ck" title="近2個法人賣超(買超)日的量加權成本棘輪(原名韋式快訊線);價格在線下(上)連續≥4根後,收盤站上壓線/跌破支線=快訊。以CPO族群2026-07-22五檔校準:4/5正中、1檔晚一日。僅顯示參考,不進回測、不影響引擎訊號"><input type="checkbox" id="wx">法人線</label>
+  <details style="font-size:12px;color:#9a9a9a"><summary>FinMind token(選填)</summary><input id="tok" type="password" placeholder="貼上 token(以官方 token= 參數傳送)"> <label class="ck" style="display:inline-flex"><input type="checkbox" id="tokSave">記住(僅存你這台瀏覽器)</label></details><a id="idxBtn" href="#" style="margin-left:6px;background:#1a1a22;border:1px solid #3a3a55;color:#9ecbff;border-radius:8px;padding:4px 10px;font-size:12.5px;cursor:pointer;text-decoration:none">📈 大盤儀表板</a>
+  <span id="stamp" style="font-size:11px;color:#777"></span>
+</header>
+<div id="hint"><b>統一策略 B v2</b>——109 檔一律 B 版價格階梯,出場確認 2→3 日(2026-08-14 生效;依全市場 1,144 檔 walk-forward 檢驗定案,BC/W/E3 已移除)。【B v2】樞紐=價格轉折點;±1×ATR14 帶;<b>進場連 2 日、出場連 3 日</b>收盤破帶才翻;冷卻 3 日;次日開盤執行。圖表:滾輪=縮放、拖曳=平移;觸控:單指=十字線、雙指=平移、捏合=縮放。D 線/法人線僅位置參考,不參與訊號。避/息/弱=部位註記非策略。</div>
+<div id="rotpanel" style="padding:8px 16px 4px;border-bottom:1px solid #171717;background:#0b0b0b;display:none">
+ <div style="font-size:12.5px;color:#c9c9c9;margin-bottom:5px"><b>族群訊號分數</b> <span id="rotmeta" style="color:#777;font-size:11.5px"></span></div>
+ <div id="rotgrid" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+</div>
+<div id="watch"></div>
+<div id="msg"></div>
+<div id="vband"></div>
+<div id="filtpanel" style="padding:8px 16px 4px;border-bottom:1px solid #171717;background:#0b0b0b;display:none">
+ <div style="font-size:12.5px;color:#c9c9c9;margin-bottom:5px"><b>★ 雙過濾網∩B多方</b> <span id="filtmeta" style="color:#777;font-size:11.5px"></span></div>
+ <div id="filtgrid" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+ <div id="fxwrap" style="display:none;margin-top:7px"><div style="font-size:12px;color:#ff7a7a;margin-bottom:4px"><b>⚠ 賣出提醒</b> <span id="fxmeta" style="color:#777;font-size:11px"></span></div><div id="fxgrid" style="display:flex;flex-wrap:wrap;gap:6px"></div></div>
+ <div id="wtwrap" style="display:none;margin-top:7px"><div style="font-size:12px;color:#7ab8ff;margin-bottom:4px"><b>📋 觀察名單(週流動性輪動)</b> <span id="wtmeta" style="color:#777;font-size:11px"></span></div><div id="wtgrid" style="display:flex;flex-wrap:wrap;gap:6px"></div></div>
+</div>
+<section id="cardsec" class="cards hidden">
+  <div class="card"><h3 id="hState">狀態</h3><div class="big" id="cState">—</div><div class="sub" id="cStateSub"></div></div>
+  <div class="card"><h3>當下訊號(以最新收盤)</h3><div class="big" id="cSig">—</div><div class="sub" id="cSigSub"></div></div>
+  <div class="card"><h3>階梯與帶(還原價)</h3><div class="big" id="cStair">—</div><div class="sub" id="cStairSub"></div></div>
+  <div class="card"><h3>選股濾網(夜掃)</h3><div class="big" id="cD">—</div><div class="sub" id="cDSub"></div></div>
+  <div class="card"><h3>選股層檢查</h3><div class="big" id="cAdx">—</div><div class="sub" id="cAdxSub"></div></div>
+</section>
+<div id="chartwrap" class="hidden">
+  <div id="viewbar">
+    <span class="vb" data-s="126">半年</span><span class="vb" data-s="250">1年</span><span class="vb" data-s="500">2年</span><span class="vb" data-s="0">全部(約5年)</span>
+    <span class="vb" data-z="out">−</span><span class="vb" data-z="in">＋</span>
+    <span id="range"></span>
+  </div>
+  <div id="readout"> </div>
+  <div id="cwrap">
+    <canvas id="chart" height="430"></canvas>
+    <canvas id="xhair" height="430"></canvas>
+    <div id="tip"></div>
+  </div>
+  <div id="legend">
+    <span class="lg"><i class="ln" style="border-color:#ff9f1a"></i>階梯支撐・多方</span>
+    <span class="lg"><i class="ln" style="border-color:#22c55e"></i>階梯壓力・空方</span>
+    <span class="lg"><i class="sw" style="background:rgba(255,159,26,.28)"></i><i class="sw" style="background:rgba(34,197,94,.28)"></i>±1×ATR14 帶</span>
+    <span class="lg" style="color:#ff4444">▲ 買進執行日</span>
+    <span class="lg" style="color:#00e676">▼ 賣出執行日</span>
+    <span class="lg" style="color:#ff8888">△ 買訊成立日</span>
+    <span class="lg" style="color:#7fe0b0">▽ 賣訊成立日</span>
+    <span class="lg"><i class="ln" style="border-color:#f0f0f0;border-top-width:2px"></i>MA20 月線(白)</span>
+    <span class="lg"><i class="ln" style="border-color:#3fa7ff;border-top-width:2px"></i>MA60 季線(藍)</span>
+    <span class="lg"><i class="ln" style="border-color:#ff4fd8;border-top-width:2px"></i>MA120 半年線(桃)</span>
+  </div>
+</div>
+<section id="tradesec" class="hidden">
+  <table id="ttab"><thead><tr><th>#</th><th>進場日</th><th>進場價</th><th>出場日</th><th>出場價</th><th>淨損益%</th><th>備註</th></tr></thead><tbody></tbody></table>
+  <div id="tsum" style="padding:0 16px;font-size:13px;color:var(--dim)"></div>
+  <div style="padding:4px 16px 0;font-size:11.5px;color:#777;line-height:1.6">註:「<span style="color:#ffcf1a">補</span>」=E3 補進場(翻多當下 ADX14≤20,等轉強日才進)。「whipsaw」=淨損益為負的短打。「未平倉」=仍持有,以最新收盤估算。損益含 0.585%/趟成本,買賣價=訊號次日開盤。表列=目前顯示區間內的交易。</div>
+</section>
+<section id="fundsec" class="hidden">
+  <div class="fundgrid">
+    <div class="fpanel"><h3>月營收(柱=近12個月營收、黃線=YoY;表=近6個月)</h3>
+      <canvas id="revchart" height="150"></canvas>
+      <table id="revtab"><thead><tr><th>月份</th><th>營收(億)</th><th>月增率</th><th>年增率</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="fpanel"><h3>近八季(單季)|營收(千元)・毛利率・淨利率・EPS(最新在上)</h3>
+      <div id="qwrap"></div><div id="ytdline"></div>
+    </div>
+  </div>
+</section>
+<footer>統一策略 B v2(2026-08-14 凍結):價格階梯 ±1×ATR14、進場連2日/出場連3日、冷卻3日、次日開盤;除權息+減資還原。此設定經診斷→事前註冊→一次確認之防過擬合協定檢驗(全市場含下市股),生效後不再調整;變更需重走協定。僅供研究,非投資建議。</footer>
+<script src="dahu_filters.js"></script><script src="rotation_data.js"></script>
+<script>
+var VD={"1101":["台泥","B","B",0,-33.1,40.0,89.6,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"1201":["味全","B","B",0,-25.5,84.9,-83.5,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"1210":["大成","B","B",0,-26.3,37.3,64.2,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"1216":["統一","B","B",0,-3.5,30.1,37.3,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"1301":["台塑","B","B",0,-47.5,73.8,-48.9,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"1303":["南亞","息","B",0,125.1,60.8,432.2,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"1326":["台化","息","B",0,-15.7,68.0,11.7,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"1402":["遠東新","B","B",0,1.4,55.5,-20.5,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"1476":["儒鴻","B","B",0,-56.6,83.0,202.1,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"1477":["聚陽","B","B",0,2.0,42.7,594.1,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"1519":["華城","B","B",0,1291.0,46.5,1369.0,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"1590":["亞德客-KY","B","B",0,45.7,60.3,196.9,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"1609":["大亞","B","B",0,38.6,55.1,169.0,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"1785":["光洋科","B","B",0,0.8,78.4,-60.0,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2002":["中鋼","B","B",0,-53.7,68.7,-36.7,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2014":["中鴻","B","B",0,-21.3,49.2,528.8,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2027":["大成鋼","B","B",0,36.2,54.5,187.4,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2049":["上銀","B","B",0,-12.0,64.8,858.7,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2303":["聯電","B","B",0,110.9,36.6,378.0,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2308":["台達電","B","B",0,511.6,39.5,2628.2,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2313":["華通","B","B",0,63.5,65.1,797.1,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2317":["鴻海","B","B",0,70.2,37.9,208.1,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2324":["仁寶","B","B",0,61.4,60.1,-10.1,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2327":["國巨","B","B",0,482.4,51.9,15100.2,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2330":["台積電","B","B",0,184.4,37.1,1297.4,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2337":["旺宏","B","B",0,104.0,82.2,237.8,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2344":["華邦電","B","B",0,489.6,56.8,2503.5,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2345":["智邦","B","B",0,194.9,47.1,5721.6,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2354":["鴻準","B","B",0,8.5,44.1,45.8,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2356":["英業達","B","B",0,129.7,54.5,233.6,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2357":["華碩","B","B",0,174.6,57.6,121.9,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2359":["所羅門","B","B",0,160.2,51.1,165.9,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2376":["技嘉","B","B",0,241.3,60.9,530.3,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2382":["廣達","B","B",0,232.9,52.7,152.0,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2383":["台光電","B","B",0,558.2,67.3,2347.3,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2408":["南亞科","B","B",0,344.3,60.8,1636.7,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2409":["友達","B","B",0,12.9,57.3,112.9,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2412":["中華電","息","B",0,12.4,14.3,141.2,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2449":["京元電子","B","B",0,376.9,44.7,518.9,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2454":["聯發科","B","B",0,195.6,53.3,289.9,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2455":["全新","B","B",0,166.9,62.6,291.8,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2464":["盟立","B","B",0,184.1,46.7,401.3,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2480":["敦陽科","B","B",0,83.5,58.0,83.5,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2492":["華新科","B","B",0,88.4,80.4,1433.6,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2603":["長榮","B","B",0,53.8,56.9,733.3,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2609":["陽明","B","B",0,-31.2,65.4,631.6,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2615":["萬海","B","B",0,-52.0,75.1,408.9,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2881":["富邦金","B","B",0,121.6,27.8,337.7,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2882":["國泰金","B","B",0,130.5,50.0,126.8,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2884":["玉山金","B","B",0,28.4,27.2,197.4,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2890":["永豐金","B","B",0,145.6,27.9,431.1,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"2891":["中信金","B","B",0,123.2,44.7,152.8,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"3006":["晶豪科","B","B",0,75.0,67.2,225.8,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"3008":["大立光","B","B",0,31.9,52.4,441.0,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"3017":["奇鋐","B","B",0,2184.9,72.2,1170.0,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"3030":["德律","B","B",0,482.3,43.9,1395.1,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"3035":["智原","B","B",0,58.5,57.2,157.5,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"3045":["台灣大","B","B",0,8.7,23.2,136.2,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"3081":["聯亞","B","B",0,666.8,89.3,209.5,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"3105":["穩懋","B","B",0,21.1,83.6,205.3,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"3163":["波若威","B","B",0,540.8,73.7,1093.7,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"3231":["緯創","B","B",0,458.8,57.5,335.9,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"3324":["雙鴻","B","B",0,63.3,62.6,836.8,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"3363":["上詮","B","B",0,784.3,73.6,923.1,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"3443":["創意","B","B",0,213.7,61.6,331.6,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"3450":["聯鈞","B","B",0,220.1,74.8,131.2,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"3481":["群創","B","B",0,103.4,66.9,52.1,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"3624":["光環","B","B",0,126.2,67.8,254.4,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"3653":["健策","B","B",0,367.3,54.8,1564.6,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"3661":["世芯-KY","B","B",0,73.9,60.1,926.2,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"3704":["合勤控","B","B",0,-28.5,67.5,219.1,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"3711":["日月光投控","B","B",0,166.3,39.6,278.4,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"4556":["旭然","B","B",0,1.4,78.0,20.9,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"4576":["大銀微系統","B","B",0,-16.5,67.4,41.3,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"4904":["遠傳","B","B",0,64.6,22.8,143.8,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"4908":["前鼎","B","B",0,196.4,57.7,368.2,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"4919":["新唐","B","B",0,21.2,68.3,198.2,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"4938":["和碩","息","B",0,9.2,38.7,69.3,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"4958":["臻鼎-KY","B","B",0,274.9,61.7,347.8,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"4971":["IET-KY","B","B",0,334.3,56.2,465.6,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"4977":["眾達-KY","B","B",0,93.9,72.4,44.6,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"4979":["華星光","B","B",0,324.1,67.7,346.7,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"4991":["環宇-KY","B","B",0,934.1,80.0,1486.9,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"5289":["宜鼎","B","B",0,463.5,54.3,1302.2,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"5340":["建榮","B","B",0,-21.7,78.6,108.0,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"5347":["世界","B","B",0,69.5,60.1,69.5,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"5880":["合庫金","B","B",0,29.6,35.2,110.5,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"6147":["頎邦","B","B",0,157.6,57.7,174.9,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"6182":["合晶","B","B",0,181.8,74.4,196.8,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"6202":["盛群","B","B",0,-27.7,71.7,-4.3,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"6213":["聯茂","B","B",0,293.9,63.7,174.9,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"6215":["和椿","B","B",0,-27.5,73.1,23.1,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"6239":["力成","B","B",0,118.7,60.7,302.6,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"6265":["方土昶","B","B",0,75.9,52.5,99.0,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"6274":["台燿","B","B",0,584.0,60.8,1990.5,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"6285":["啟碁","B","B",0,13.0,68.8,33.6,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"6290":["良維","B","B",0,221.3,53.8,216.3,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"6414":["樺漢","B","B",0,39.3,46.9,64.2,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"6426":["統新","B","B",0,-34.3,73.6,-48.0,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"6451":["訊芯-KY","B","B",0,-28.9,70.3,-15.9,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"6770":["力積電","B","B",0,71.5,60.1,71.5,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"6789":["采鈺","B","B",0,76.0,35.8,76.0,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"6805":["富世達","B","B",0,75.8,56.5,75.8,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"7853":["政美應用","新","B",0,null,null,null,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"8043":["蜜望實","B","B",0,195.0,85.1,423.9,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"8069":["元太","B","B",0,14.4,52.2,118.9,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"8150":["南茂","B","B",0,58.3,44.5,160.6,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"8299":["群聯","B","B",0,199.7,53.3,767.5,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0],"8996":["高力","B","B",0,323.3,62.1,217.4,"B v2 統計(2010-01或上市日起;近5年=2021-08起;2026-08-14 重算)",0]};
+var GR=[["B",["1101","1201","1210","1216","1301","1402","1476","1477","1519","1590","1609","1785","2002","2014","2027","2049","2303","2308","2313","2317","2324","2327","2330","2337","2344","2345","2354","2356","2357","2359","2376","2382","2383","2408","2409","2449","2454","2455","2464","2480","2492","2603","2609","2615","2881","2882","2884","2890","2891","3006","3008","3017","3030","3035","3045","3081","3105","3163","3231","3324","3363","3443","3450","3481","3624","3653","3661","3704","3711","4556","4576","4904","4908","4919","4958","4971","4977","4979","4991","5289","5340","5347","5880","6147","6182","6202","6213","6215","6239","6265","6274","6285","6290","6414","6426","6451","6770","6789","6805","8043","8069","8150","8299","8996"]],["息",["1303","1326","2412","4938"]],["新",["7853"]]];
+/*ENGINE-START*/
+function calc(bars,w,P){w=w||2;P=P||14;
+ var n=bars.length,h=[],l=[],c=[],o=[],i,j;
+ for(i=0;i<n;i++){h.push(bars[i].h);l.push(bars[i].l);c.push(bars[i].c);o.push(bars[i].o);}
+ var tr=[h[0]-l[0]];
+ for(i=1;i<n;i++)tr.push(Math.max(h[i]-l[i],Math.abs(h[i]-c[i-1]),Math.abs(l[i]-c[i-1])));
+ var atr=new Array(n).fill(NaN);
+ if(n>=P){var s=0;for(i=0;i<P;i++)s+=tr[i];atr[P-1]=s/P;
+  for(i=P;i<n;i++)atr[i]=(atr[i-1]*(P-1)+tr[i])/P;}
+ var adx=new Array(n).fill(NaN);
+ if(n>=2*P+1){var pdm=[0],ndm=[0];
+  for(i=1;i<n;i++){var up=h[i]-h[i-1],dn=l[i-1]-l[i];
+   pdm.push(up>dn&&up>0?up:0);ndm.push(dn>up&&dn>0?dn:0);}
+  var st=0,sp=0,sn=0;for(i=1;i<=P;i++){st+=tr[i];sp+=pdm[i];sn+=ndm[i];}
+  var dx=new Array(n).fill(NaN);
+  for(i=P+1;i<n;i++){if(i>P+1){st=st-st/P+tr[i];sp=sp-sp/P+pdm[i];sn=sn-sn/P+ndm[i];}
+   var pdi=st?100*sp/st:0,ndi=st?100*sn/st:0;
+   dx[i]=(pdi+ndi)?100*Math.abs(pdi-ndi)/(pdi+ndi):0;}
+  var s2=0;for(i=P+1;i<=2*P;i++)s2+=dx[i];adx[2*P]=s2/P;
+  for(i=2*P+1;i<n;i++)adx[i]=(adx[i-1]*(P-1)+dx[i])/P;}
+ var conf=[];for(i=0;i<n;i++)conf.push([]);
+ for(var t=w;t<n-w;t++){
+  var lo=Infinity,hi=-Infinity;
+  for(j=t-w;j<=t+w;j++){if(l[j]<lo)lo=l[j];if(h[j]>hi)hi=h[j];}
+  if(l[t]===lo)conf[t+w].push({ty:'L',p:l[t]});
+  if(h[t]===hi)conf[t+w].push({ty:'H',p:h[t]});}
+ return{n:n,h:h,l:l,c:c,o:o,atr:atr,adx:adx,conf:conf,dates:bars.map(function(b){return b.d})};}
+
+function runE(D,o){
+ o=Object.assign({kIn:1,kOut:1,Cin:2,Cout:3,R:3,adxGate:false,reentry:false},o||{});
+ var n=D.n,c=D.c,op=D.o,h=D.h,l=D.l,atr=D.atr,adx=D.adx,conf=D.conf;
+ var FB=1.001425,FS=0.995575;
+ function gateOK(i){if(o.adxGate&&!(adx[i]>20))return false;return true;}
+ var dir=0,L=null,cnt=0,flip=null,lastPL=null,lastPH=null;
+ var entry=null,ebi=null,elate=false,pendBuy=false;
+ var closed=[],line=new Array(n).fill(null),dirs=new Array(n).fill(0);
+ for(var i=0;i<n;i++){
+  for(var k=0;k<conf[i].length;k++){var p=conf[i][k];if(p.ty==='L')lastPL=p.p;else lastPH=p.p;}
+  if(dir===0){
+   if(conf[i].length){var p0=conf[i][0];dir=c[i]>=p0.p?1:-1;L=p0.p;cnt=0;}
+   line[i]=L;dirs[i]=dir;continue;}
+  for(var k2=0;k2<conf[i].length;k2++){var p2=conf[i][k2];
+   if(dir===1&&p2.ty==='L')L=Math.max(L,p2.p);
+   if(dir===-1&&p2.ty==='H')L=Math.min(L,p2.p);}
+  var BI=(o.kIn*atr[i])||0,BO=(o.kOut*atr[i])||0,flipped=false;
+  if(dir===1){
+   cnt=c[i]<L-BO?cnt+1:0;
+   if(cnt>=o.Cout&&(flip===null||i>flip+o.R)){
+    dir=-1;
+    if(lastPH!==null)L=lastPH;else{var mx=-Infinity;for(var q=Math.max(0,i-4);q<=i;q++)if(h[q]>mx)mx=h[q];L=mx;}
+    if(entry!==null&&i+1<n){var px=op[i+1]*FS;closed.push({bi:ebi,si:i+1,net:px/entry-1,late:elate});entry=null;}
+    pendBuy=false;cnt=0;flip=i;flipped=true;}
+  }else{
+   cnt=c[i]>L+BI?cnt+1:0;
+   if(cnt>=o.Cin&&(flip===null||i>flip+o.R)){
+    dir=1;
+    if(lastPL!==null)L=lastPL;else{var mn=Infinity;for(var q2=Math.max(0,i-4);q2<=i;q2++)if(l[q2]<mn)mn=l[q2];L=mn;}
+    if(gateOK(i)&&i+1<n){entry=op[i+1]*FB;ebi=i+1;elate=false;}
+    else if(o.reentry)pendBuy=true;
+    cnt=0;flip=i;flipped=true;}
+  }
+  if(!flipped&&dir===1&&pendBuy&&entry===null&&gateOK(i)&&i+1<n){
+   entry=op[i+1]*FB;ebi=i+1;elate=true;pendBuy=false;}
+  line[i]=L;dirs[i]=dir;
+ }
+ var openTr=null;
+ if(entry!==null)openTr={bi:ebi,net:(c[n-1]*FS)/entry-1,late:elate,open:true};
+ var cum=1;for(var z=0;z<closed.length;z++)cum*=(1+closed[z].net);
+ if(openTr)cum*=(1+openTr.net);
+ return{closed:closed,openTr:openTr,line:line,dirs:dirs,
+  cum:Math.round((cum-1)*1000)/10,
+  state:{dir:dir,L:L,B:(1*atr[n-1])||0,cnt:cnt,flip_i:flip,pend:pendBuy,
+   cooldown_left:flip===null?0:Math.max(0,flip+o.R-(n-1)),
+   days:flip===null?null:(n-1-flip),adx:adx[n-1],holding:entry!==null}};}
+
+function chipLines(bars,netMap){
+ var m=bars.length,rows=[],i,j;
+ for(i=0;i<m;i++){var nv=netMap[bars[i].d];
+  rows.push({has:nv!==undefined,net:nv||0,vw:(bars[i].o+bars[i].h+bars[i].l+bars[i].c)/4});}
+ var supp=new Array(m).fill(NaN),pres=new Array(m).fill(NaN),ls=NaN,lp=NaN;
+ for(i=0;i<m;i++){var sB=0,wB=0,sS=0,wS=0;
+  for(j=Math.max(0,i-9);j<=i;j++){if(!rows[j].has)continue;var x=rows[j].net;
+   if(x>0){sB+=x*rows[j].vw;wB+=x;}else if(x<0){sS+=(-x)*rows[j].vw;wS+=(-x);}}
+  supp[i]=wB>0?sB/wB:ls;if(wB>0)ls=supp[i];
+  pres[i]=wS>0?sS/wS:lp;if(wS>0)lp=pres[i];}
+ return{supp:supp,pres:pres};}
+
+function runBC(D,cl,o){
+ o=Object.assign({adxGate:false,reentry:false},o||{});
+ var n=D.n,c=D.c,op=D.o,atr=D.atr,adx=D.adx,supp=cl.supp,pres=cl.pres;
+ var FB=1.001425,FS=0.995575;
+ var dir=0,L=null,cnt=0,flip=null,pend=null,pendLate=false,pendBuy=false;
+ var entry=null,ebi=null,elate=false;
+ var closed=[],line=new Array(n).fill(null),dirs=new Array(n).fill(0);
+ for(var i=0;i<n;i++){
+  if(pend==='b'){entry=op[i]*FB;ebi=i;elate=pendLate;pendLate=false;pend=null;}
+  else if(pend==='s'){closed.push({bi:ebi,si:i,net:op[i]*FS/entry-1,late:elate});entry=null;elate=false;pend=null;}
+  if(dir===0){
+   if(!isNaN(supp[i])&&!isNaN(pres[i])){dir=c[i]>=(supp[i]+pres[i])/2?1:-1;L=dir===1?supp[i]:pres[i];cnt=0;}
+   line[i]=L;dirs[i]=dir;continue;}
+  if(dir===1&&!isNaN(supp[i]))L=Math.max(L,supp[i]);
+  if(dir===-1&&!isNaN(pres[i]))L=Math.min(L,pres[i]);
+  var B2=(atr[i])||0,flipped=false;
+  if(dir===1){
+   cnt=c[i]<L-B2?cnt+1:0;
+   if(cnt>=2&&(flip===null||i>flip+3)){
+    dir=-1;L=isNaN(pres[i])?L:pres[i];
+    if(entry!==null&&i+1<n)pend='s';
+    pendBuy=false;cnt=0;flip=i;flipped=true;}
+  }else{
+   cnt=c[i]>L+B2?cnt+1:0;
+   if(cnt>=2&&(flip===null||i>flip+3)){
+    dir=1;L=isNaN(supp[i])?L:supp[i];
+    if(entry===null&&i+1<n){
+     if(!o.adxGate||adx[i]>20){pend='b';pendLate=false;}
+     else if(o.reentry)pendBuy=true;}
+    cnt=0;flip=i;flipped=true;}
+  }
+  if(!flipped&&o.adxGate&&o.reentry&&dir===1&&pendBuy&&entry===null&&pend===null&&adx[i]>20&&i+1<n){
+   pend='b';pendLate=true;pendBuy=false;}
+  line[i]=L;dirs[i]=dir;
+ }
+ var openTr=null;
+ if(entry!==null)openTr={bi:ebi,net:(c[n-1]*FS)/entry-1,late:elate,open:true};
+ var cum=1;for(var z=0;z<closed.length;z++)cum*=(1+closed[z].net);
+ if(openTr)cum*=(1+openTr.net);
+ return{closed:closed,openTr:openTr,line:line,dirs:dirs,
+  cum:Math.round((cum-1)*1000)/10,
+  state:{dir:dir,L:L,B:(1*atr[n-1])||0,cnt:cnt,flip_i:flip,pend:pendBuy,
+   cooldown_left:flip===null?0:Math.max(0,flip+3-(n-1)),
+   days:flip===null?null:(n-1-flip),adx:adx[n-1],holding:entry!==null}};}
+
+function runW(D,bars,netMap,o){
+ o=Object.assign({conf2:true,adxGate:false,reentry:false},o||{});
+ var n=D.n,c=D.c,op=D.o,adx=D.adx;
+ var FB=1.001425,FS=0.995575;
+ var rows=[],i,j;
+ for(i=0;i<n;i++){var nv=netMap[bars[i].d];
+  rows.push({has:nv!==undefined,net:nv||0,p:(bars[i].o+bars[i].h+bars[i].l+bars[i].c)/4});}
+ function cost(i,side){var s=0,w=0,cnt=0;
+  for(j=i;j>=0&&cnt<2;j--){if(!rows[j].has)continue;var x=rows[j].net;
+   if(side===1?x>0:x<0){var a=Math.abs(x);s+=a*rows[j].p;w+=a;cnt++;}}
+  return w>0?s/w:NaN;}
+ var P=NaN,S=NaN,stkP=false,stkS=false,runP=0,runS=0,cntUp=0,cntDn=0,lockBP=0,lockBS=0;
+ var belowW=false,aboveW=false,dirW=-1;
+ var entry=null,ebi=null,elate=false,pendBuy=false,pend=null,pendLate=false;
+ var closed=[],line=new Array(n).fill(null),dirs=new Array(n).fill(0),flip=null;
+ for(i=0;i<n;i++){
+  if(pend==='b'){entry=op[i]*FB;ebi=i;elate=pendLate;pendLate=false;pend=null;}
+  else if(pend==='s'){closed.push({bi:ebi,si:i,net:op[i]*FS/entry-1,late:elate});entry=null;elate=false;pend=null;}
+  var p2=cost(i,-1),s2=cost(i,1);
+  var buySig=false,sellSig=false;
+  if(o.conf2){
+   if(!stkP){P=isNaN(p2)?P:p2;if(!isNaN(P)&&c[i]<P){stkP=true;runP=0;cntUp=0;}}
+   else{P=isNaN(p2)?P:Math.min(P,p2);runP++;
+    if(!isNaN(P)&&c[i]>P){if(cntUp===0)lockBP=runP-1;cntUp++;
+     if(cntUp>=2){stkP=false;if(lockBP>=4)buySig=true;}}
+    else cntUp=0;}
+   if(!stkS){S=isNaN(s2)?S:s2;if(!isNaN(S)&&c[i]>S){stkS=true;runS=0;cntDn=0;}}
+   else{S=isNaN(s2)?S:Math.max(S,s2);runS++;
+    if(!isNaN(S)&&c[i]<S){if(cntDn===0)lockBS=runS-1;cntDn++;
+     if(cntDn>=2){stkS=false;if(lockBS>=4)sellSig=true;}}
+    else cntDn=0;}
+  }else{
+   if(i===0||isNaN(P)){P=p2;}
+   else{belowW=c[i-1]<P;
+    P=isNaN(p2)?P:(belowW?Math.min(P,p2):p2);
+    if(belowW){runP++;if(runP>=4&&!isNaN(P)&&c[i]>P)buySig=true;}else runP=0;}
+   if(i===0||isNaN(S)){S=s2;}
+   else{aboveW=c[i-1]>S;
+    S=isNaN(s2)?S:(aboveW?Math.max(S,s2):s2);
+    if(aboveW){runS++;if(runS>=4&&!isNaN(S)&&c[i]<S)sellSig=true;}else runS=0;}
+  }
+  if(buySig&&dirW===-1){
+   dirW=1;flip=i;
+   if(entry===null&&pend!=='b'){
+    if(!o.adxGate||adx[i]>20){if(i+1<n){pend='b';pendLate=false;}}
+    else if(o.reentry)pendBuy=true;}
+  }else if(sellSig&&dirW===1){
+   dirW=-1;flip=i;pendBuy=false;
+   if(entry!==null&&i+1<n)pend='s';
+  }else if(pendBuy&&o.adxGate&&o.reentry&&dirW===1&&entry===null&&pend===null){
+   if(!isNaN(P)&&c[i]<P)pendBuy=false;
+   else if(adx[i]>20&&i+1<n){pend='b';pendLate=true;pendBuy=false;}}
+  line[i]=dirW===1?(isNaN(S)?null:S):(isNaN(P)?null:P);
+  dirs[i]=dirW;
+ }
+ var openTr=null;
+ if(entry!==null)openTr={bi:ebi,net:(c[n-1]*FS)/entry-1,late:elate,open:true};
+ var cum=1;for(var z=0;z<closed.length;z++)cum*=(1+closed[z].net);
+ if(openTr)cum*=(1+openTr.net);
+ var endCnt=o.conf2?(dirW===-1?(stkP?cntUp:0):(stkS?cntDn:0)):0;
+ return{closed:closed,openTr:openTr,line:line,dirs:dirs,noBand:true,
+  cum:Math.round((cum-1)*1000)/10,
+  state:{dir:dirW,L:line[n-1],B:0,cnt:endCnt,flip_i:flip,pend:pendBuy,
+   cooldown_left:0,days:flip===null?null:(n-1-flip),adx:adx[n-1],holding:entry!==null}};}
+/*ENGINE-END*/
+
+var API='https://api.finmindtrade.com/api/v4/data';
+var SPLITS=[0.5,0.25,0.2,0.1,2,4,5,10];
+var cur=null,view={v0:0,v1:0},manual=false;
+
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s).replace(/[&<>"]/g,function(m){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]})}
+async function fm(dataset,params){
+ var u=new URL(API);u.searchParams.set('dataset',dataset);
+ for(var k in params)u.searchParams.set(k,params[k]);
+ try{var t9=(document.getElementById('tok')&&document.getElementById('tok').value.trim())||localStorage.getItem('fm_tok')||'';if(t9)u.searchParams.set('token',t9);}catch(e){}
+ var ac=new AbortController();var tm=setTimeout(function(){ac.abort()},25000);
+ var r=await fetch(u,{signal:ac.signal});clearTimeout(tm);
+ var j=await r.json();
+ if(!j.data&&j.msg&&j.status!==200)throw new Error(dataset+':'+j.msg);
+ return j.data||[];}
+function daysAgo(d){var x=new Date();x.setDate(x.getDate()-d);return x.toISOString().slice(0,10)}
+
+function adjust(bars,divs,crs,notes){
+ var ev=[];
+ for(var i=0;i<divs.length;i++){var d=divs[i];
+  var bp=parseFloat(d.before_price)||0;
+  var rp=parseFloat(d.reference_price)||0;if(!rp)rp=parseFloat(d.after_price)||0;
+  if(bp<=0||rp<=0)continue;
+  var f=rp/bp;if(f>0.3&&f<=1)ev.push({date:d.date,f:f,t:'除權息'});}
+ for(var i2=0;i2<crs.length;i2++){var d2=crs[i2];
+  var bp2=parseFloat(d2.ClosingPriceonTheLastTradingDay)||0,rp2=parseFloat(d2.PostReductionReferencePrice)||0;
+  if(bp2<=0||rp2<=0)continue;
+  var f2=rp2/bp2;if(f2>1&&f2<=6)ev.push({date:d2.date,f:f2,t:'減資'});}
+ ev.sort(function(a,b){return a.date<b.date?-1:1});
+ for(var e=0;e<ev.length;e++){var E=ev[e],n0=0;
+  for(var j2=0;j2<bars.length;j2++)if(bars[j2].d<E.date)n0++;
+  if(n0>0&&n0<bars.length){
+   for(var j=0;j<bars.length;j++)if(bars[j].d<E.date){bars[j].o*=E.f;bars[j].h*=E.f;bars[j].l*=E.f;bars[j].c*=E.f;}
+   notes.push('已還原'+E.t+' '+E.date+'(因子 '+E.f.toFixed(4)+')');}}
+ for(var k=1;k<bars.length;k++){
+  var prev=bars[k-1].c;if(prev<=0)continue;
+  var gap=bars[k].o/prev;if(gap>0.7&&gap<1.4)continue;
+  var best=SPLITS[0],bd=1e9;
+  for(var m=0;m<SPLITS.length;m++){var er=Math.abs(gap-SPLITS[m])/SPLITS[m];if(er<bd){bd=er;best=SPLITS[m];}}
+  if(bd<0.12){for(var j3=0;j3<k;j3++){bars[j3].o*=best;bars[j3].h*=best;bars[j3].l*=best;bars[j3].c*=best;}
+   notes.push('⚠ 偵測疑似分割 '+bars[k].d+'(因子 '+best+')已自動還原,請人工確認');}
+  else notes.push('⚠ '+bars[k].d+' 異常跳空 '+gap.toFixed(2)+'x,無法自動判定');}
+ return bars;}
+
+
+function weiLines(bars,netMap){
+ var n=bars.length,rows=[],i,j;
+ for(i=0;i<n;i++){var nv=netMap[bars[i].d];
+  rows.push({has:nv!==undefined,net:nv||0,p:(bars[i].o+bars[i].h+bars[i].l+bars[i].c)/4});}
+ function cost(i,side){var s=0,w=0,cnt=0;
+  for(j=i;j>=0&&cnt<2;j--){if(!rows[j].has)continue;var x=rows[j].net;
+   if(side===1?x>0:x<0){var a=Math.abs(x);s+=a*rows[j].p;w+=a;cnt++;}}
+  return w>0?s/w:NaN;}
+ var P=new Array(n).fill(NaN),S=new Array(n).fill(NaN),dP=new Array(n).fill(false),dS=new Array(n).fill(false);
+ var buy=[],sell=[],runP=0,runS=0;
+ var c=bars.map(function(b){return b.c});
+ for(i=0;i<n;i++){
+  var p2=cost(i,-1),s2=cost(i,1);
+  if(i===0||isNaN(P[i-1])){P[i]=p2;}
+  else{var below=c[i-1]<P[i-1];
+   P[i]=isNaN(p2)?P[i-1]:(below?Math.min(P[i-1],p2):p2);
+   if(below){dP[i]=true;runP++;if(runP>=4&&!isNaN(P[i])&&c[i]>P[i])buy.push(i);}else runP=0;}
+  if(i>0&&isNaN(P[i]))P[i]=P[i-1];
+  if(i===0||isNaN(S[i-1])){S[i]=s2;}
+  else{var above=c[i-1]>S[i-1];
+   S[i]=isNaN(s2)?S[i-1]:(above?Math.max(S[i-1],s2):s2);
+   if(above){dS[i]=true;runS++;if(runS>=4&&!isNaN(S[i])&&c[i]<S[i])sell.push(i);}else runS=0;}
+  if(i>0&&isNaN(S[i]))S[i]=S[i-1];
+ }
+ return{P:P,S:S,dP:dP,dS:dS,buy:buy,sell:sell};}
+
+function dlines(bars,craw,netMap){
+ var rows=[],idx=[];
+ for(var i=0;i<bars.length;i++){var b=bars[i];
+  if(netMap[b.d]===undefined)continue;
+  rows.push({vw:b.vw*(b.c/craw[b.d]),net:netMap[b.d]});idx.push(i);}
+ function roll(N,side){
+  var out=new Array(bars.length).fill(NaN),lastv=NaN;
+  for(var r2=0;r2<rows.length;r2++){
+   var s=0,w=0;
+   for(var j=Math.max(0,r2-N+1);j<=r2;j++){var x=rows[j].net;
+    if(side==='P'?x<0:x>0){var a=Math.abs(x);s+=a*rows[j].vw;w+=a;}}
+   var v=w>0?s/w:lastv;if(w>0)lastv=v;
+   out[idx[r2]]=v;}
+  var lv=NaN;
+  for(var q=0;q<out.length;q++){if(!isNaN(out[q]))lv=out[q];else out[q]=lv;}
+  return out;}
+ return{p5:roll(5,'P'),p10:roll(10,'P'),s5:roll(5,'S'),s10:roll(10,'S')};}
+
+function activeRes(){
+ var mode=curMode(),e3=$('e3').checked,w2=$('w2')?$('w2').checked:true,key=mode+(e3?'1':'0')+(mode==='W'?(w2?'c':'s'):'');
+ if(!cur._res)cur._res={};
+ if(!cur._res[key]){
+  var o=e3?{adxGate:true,reentry:true}:{};
+  if(mode==='W'){o.conf2=w2;cur._res[key]=runW(cur.D,cur.bars,cur.net,o);}
+  else cur._res[key]=mode==='BC'?runBC(cur.D,cur.cl,o):runE(cur.D,o);}
+ return cur._res[key];}
+function curMode(){return 'B'}
+function setMode(m){$('modeSeg').querySelectorAll('span').forEach(function(el){el.classList.toggle('on',el.dataset.m===m)})}
+
+async function query(sid,sname){
+ try{
+ $('msg').textContent='抓取 '+sid+' 資料中…';
+ var px=await fm('TaiwanStockPrice',{data_id:sid,start_date:daysAgo(1900)});
+ if(!px.length)throw new Error('查無價量資料(代碼 '+sid+')');
+ var divs=[];try{divs=await fm('TaiwanStockDividendResult',{data_id:sid,start_date:daysAgo(1900)})}catch(e){}
+ var crs=[];try{crs=await fm('TaiwanStockCapitalReductionReferencePrice',{data_id:sid,start_date:daysAgo(1900)})}catch(e){}
+ var ins=[];try{ins=await fm('TaiwanStockInstitutionalInvestorsBuySell',{data_id:sid,start_date:daysAgo(1900)})}catch(e){}
+ var mrD=[];try{mrD=await fm('TaiwanStockMonthRevenue',{data_id:sid,start_date:daysAgo(620)})}catch(e){}
+ var fsD=[];try{fsD=await fm('TaiwanStockFinancialStatements',{data_id:sid,start_date:daysAgo(950)})}catch(e){}
+ var bars=[],craw={};
+ for(var i=0;i<px.length;i++){var r=px[i];var vol=+r.Trading_Volume;
+  var o1=+r.open,h1=+r.max,l1=+r.min,c1=+r.close;
+  if(!(vol>0)||!(o1>0)||!(h1>0)||!(l1>0)||!(c1>0))continue;
+  bars.push({d:r.date,o:o1,h:h1,l:l1,c:c1,vw:+r.Trading_money/vol});}
+ bars.sort(function(a,b){return a.d<b.d?-1:1});
+ for(var i2=0;i2<bars.length;i2++)craw[bars[i2].d]=bars[i2].c;
+ var rawClose=bars[bars.length-1].c;
+ var notes=[];adjust(bars,divs,crs,notes);
+ var netMap={};
+ for(var i3=0;i3<ins.length;i3++){var rr=ins[i3];
+  netMap[rr.date]=(netMap[rr.date]||0)+(+rr.buy-+rr.sell)/1000;}
+ var D=calc(bars);
+ var cl=chipLines(bars,netMap);
+ var dl=dlines(bars,craw,netMap);
+ var wei=weiLines(bars,netMap);
+ cur={sid:sid,name:sname,bars:bars,D:D,cl:cl,dl:dl,wei:wei,net:netMap,notes:notes,rawClose:rawClose,mr:mrD,fs:fsD,_res:null};
+ view.v1=D.n;view.v0=Math.max(0,D.n-126);
+ lastFetch=Date.now();
+ $('stamp').textContent='資料時間 '+new Date().toLocaleTimeString('zh-TW',{hour12:false}).slice(0,5)+'|最新K棒 '+bars[bars.length-1].d;
+ if(typeof lastBarStale==='function'&&lastBarStale())$('stamp').textContent+='|⏳今日資料未釋出,將自動重查(日線約14:00起、法人約16:00後)';
+ render();
+ var adjN=0,warns=[];
+ notes.forEach(function(x){if(x.charAt(0)==='\u26a0')warns.push(x);else adjN++;});
+ $('msg').textContent=(adjN?('已還原 '+adjN+' 次除權息/減資(近5年)'):'')+(warns.length?((adjN?'\n':'')+warns.slice(0,4).join('\n')):'');
+ }catch(err){showErr(err);}
+}
+
+function showErr(err){
+ var m=String((err&&err.message)||err);
+ if(/Failed to fetch|NetworkError|Load failed|aborted/i.test(m)){
+  var hasTok=!!(localStorage.getItem('fm_tok')||(document.getElementById('tok')&&document.getElementById('tok').value.trim()));
+  $('msg').innerHTML= hasTok
+   ? '⚠ 無法連線到 FinMind 資料源。<br>請檢查網路,或稍候再試——FinMind 免費額度用盡或被暫時節流時也會出現,此時請完全靜置約 1 小時再查,重複重試會延長限制。<br><span style="color:#9a9a9a">(下方族群訊號與 ★ 名單為每晚更新的靜態資料,不受影響照常顯示)</span>'
+   : '⚠ 尚未設定 FinMind token,無法載入個股 K 線。<br><b style="color:#ffd37a">請在上方「▶ FinMind token(選填)」貼上你的 FinMind token 並按「記住」</b>,之後這台瀏覽器就會記住。<br>token 可至 <a href="https://finmindtrade.com/" target="_blank" rel="noopener" style="color:#ffd37a">finmindtrade.com</a> 免費註冊取得。<br><span style="color:#9a9a9a">(下方族群訊號與 ★ 名單為每晚更新的靜態資料,不需 token 即可看)</span>';
+ }else $('msg').textContent='錯誤:'+m;}
+
+var VDWIN_DEF='2018-06~2024-06',VDWIN={};
+'2359,5289,6202,6213,6215,6274,8299'.split(',').forEach(function(s){VDWIN[s]='2021-08~2026-08'});
+'2324,2376,2464,3017,3105,3163,3324,3443,3661,4908,4938,4971,5347,6426,6770,6805,8996'.split(',').forEach(function(s){VDWIN[s]='2021-05~2026-08'});
+function winLabel(sid){
+ var w=VDWIN[sid]||VDWIN_DEF,oos=/2024-06$/.test(w);
+ var tip=oos?'完全樣本外:回測窗結束於引擎調參期(2024-07 起)之前':'\u26a0 此窗含 2024-07 之後的引擎調參期,非完全樣本外——該檔較晚納入清單,無更早的乾淨窗可用,數字請打折看待';
+ return '<span title="'+tip+'" style="border-bottom:1px dotted #888;cursor:help">'+(oos?'近五年樣外(':'近五年(')+w+(oos?')':',含調參期\u26a0)')+'</span>';}
+
+function vdBand(){
+ var v=VD[cur.sid],el=$('vband');
+ if(!v){el.style.borderLeftColor='#666';el.innerHTML='<b>'+cur.sid+' '+esc(cur.name)+'</b>|非 109 檔清單——統一引擎 B v2,僅供觀察';el.style.display='block';return;}
+ var g=v[1],GC={'息':'#8fd7bd','新':'#999'};
+ el.style.borderLeftColor=GC[g]||'#ff9f1a';
+ var t='<b>'+cur.sid+' '+esc(v[0])+'</b>|<b style="color:#ffd37a">統一策略 B v2</b>';
+ if(g==='息')t+='|<b style="color:#8fd7bd">抱息組</b>(部位偏好註記)';
+ if(g==='新')t+='|<span style="color:#bbb">上市未滿一年,統計不足</span>';
+ if(v[4]!=null)t+='|B v2 歷史:近5年 '+(v[4]>=0?'+':'')+v[4]+'%・全窗 '+(v[6]>=0?'+':'')+v[6]+'%・回撤 '+v[5]+'%(描述統計,未經前瞻驗證,部位自酌)';
+ if(window.DFILT){var fu=window.DFILT.fund.indexOf(cur.sid)>-1,fl=window.DFILT.flow.indexOf(cur.sid)>-1;
+  t+='|選股濾網('+window.DFILT.date+'):'+(fu?'<b style="color:#3ef94a">基本面O</b>':'基本面X')+' '+(fl?'<b style="color:#3ef94a">資金流O</b>':'資金流X')+((fu&&fl)?' <b style="color:#ffd37a">★雙過</b>':'');}
+ el.innerHTML=t;el.style.display='block';}
+
+function render(){
+ if(!cur)return;
+ var res=activeRes(),D=cur.D,st=res.state,n=D.n,c=D.c[n-1],mode=curMode();
+ $('cardsec').classList.remove('hidden');$('chartwrap').classList.remove('hidden');$('tradesec').classList.remove('hidden');
+ $('hState').textContent=(mode==='BC'?'BC 版狀態(籌碼階梯)':mode==='W'?'W 版狀態(法人線)':'B v2 狀態(價格階梯)');
+ vdBand();
+ var dirTxt=st.dir===1?'多方(支撐)':st.dir===-1?'空方(壓力)':'未初始化';
+ $('cState').textContent=dirTxt;$('cState').className='big '+(st.dir===1?'long':'short');
+ var hold=st.holding?'持有中':st.pend?'多方但尚未進場(等補)':'空手';
+ $('cStateSub').textContent=cur.name+'('+cur.sid+') 第 '+(st.days==null?'?':st.days)+' 天|'+hold+'\n最新 '+D.dates[n-1]+' 收 '+cur.rawClose;
+ var L=st.L,B=st.B,top=L+B,bot=L-B;
+ $('cStair').textContent=L==null?'—':L.toFixed(2);
+ $('cStairSub').textContent=L==null?'':('帶 '+bot.toFixed(2)+' ~ '+top.toFixed(2)+'(ATR14 '+B.toFixed(2)+')'+(mode==='BC'?'\n樞紐=近10日法人成本棘輪':mode==='W'?'\n法人線N2成本棘輪(無帶狀,線即觸發價)':''));
+ var sig='',cls='sig-none',sub='';
+ if(L!=null){
+  if(st.flip_i===n-1){
+   if(st.dir===1){
+    var gated=$('e3').checked&&!(st.adx>20);
+    if(gated){sig='今日翻多|E3 暫不進場';cls='sig-warn';sub='ADX '+st.adx.toFixed(1)+' ≤20,等轉強日再補進場';}
+    else{sig='今日翻多 → 明日開盤買進';cls='sig-buy';sub='冷卻 3 日內不反向';}
+   }else{sig='今日翻空 → 明日開盤賣出';cls='sig-sell';sub='空手者續觀望;冷卻 3 日';}
+  }else if(st.pend&&st.adx>20){
+   sig='ADX 轉強 → 明日開盤補進場';cls='sig-buy';sub='E3 補進場:ADX '+st.adx.toFixed(1)+' 已>20,多方狀態持續中';
+  }else if(st.cnt===1){
+   sig='已破帶 1 日(1/2)';cls='sig-warn';
+   sub=st.dir===1?('明日收盤再 < '+bot.toFixed(2)+' 即翻空賣出'):('明日收盤再 > '+top.toFixed(2)+' 即翻多'+(st.adx>20?'買進':'(看ADX)'));
+  }else if(st.pend){
+   sig='等 E3 補進場';cls='sig-warn';sub='多方狀態成立;ADX '+st.adx.toFixed(1)+' ≤20,>20 當日收盤確認、次日開盤進場';
+  }else if(st.cooldown_left>0){
+   sig='冷卻中(剩 '+st.cooldown_left+' 日)';cls='sig-none';sub='冷卻期內不反向翻轉';
+  }else{
+   sig='無訊號';cls='sig-none';
+   sub=st.dir===1?('翻空需連 2 日收盤 < '+bot.toFixed(2)+'(現距 '+((c/bot-1)*100).toFixed(1)+'%)')
+                :('翻多需連 2 日收盤 > '+top.toFixed(2)+'(現距 '+((c/top-1)*100).toFixed(1)+'%)');
+  }}
+ $('cSig').textContent=sig;$('cSig').className='big '+cls;$('cSigSub').textContent=sub;
+ if(cur.wei&&$('wx')&&$('wx').checked){
+  var wl9=cur.wei,ex9='';
+  if(wl9.buy.length&&wl9.buy[wl9.buy.length-1]===n-1)ex9='★ 法人線快訊:今日收盤站上短窗大戶線(快訊,非引擎訊號)';
+  else if(wl9.sell.length&&wl9.sell[wl9.sell.length-1]===n-1)ex9='★ 法人線快訊:今日收盤跌破短窗大戶線(快訊,非引擎訊號)';
+  if(ex9)$('cSigSub').textContent=($('cSigSub').textContent?$('cSigSub').textContent+'\n':'')+ex9;
+ }
+ var fu9=window.DFILT&&window.DFILT.fund.indexOf(cur.sid)>-1,fl9=window.DFILT&&window.DFILT.flow.indexOf(cur.sid)>-1;
+ $('cD').textContent=window.DFILT?((fu9&&fl9)?'★ 雙過':(fu9?'基本面過':(fl9?'資金流過':'未通過'))):'—';
+ $('cDSub').textContent=window.DFILT?('基本面(近4季YoY三率齊升):'+(fu9?'V':'X')+'\n族群資金流入:'+(fl9?'V':'X')+'\n('+window.DFILT.date+' 夜掃;選股層參考,不影響 B v2 訊號)'):'夜掃後更新';
+ var adx=st.adx;
+ $('cAdx').textContent=isNaN(adx)?'—':('ADX14 '+adx.toFixed(1));
+ $('cAdxSub').textContent=(adx>20?'趨勢成立':'⚠ 趨勢弱(<20):此系統只適用趨勢股')+'\n高息牛皮股請抱息,興櫃不適用';
+ drawChart();buildTable();buildFund();}
+
+function fetchEquity(sid){
+ window.__EQP=window.__EQP||{};if(window.__EQP[sid])return;window.__EQP[sid]=1;
+ var tok='';try{tok=localStorage.getItem('fm_tok')||''}catch(e){}
+ if(!tok){var te=document.getElementById('tok');if(te)tok=te.value.trim();}
+ if(!tok)return;
+ var sd=new Date(Date.now()-900*864e5).toISOString().slice(0,10);
+ fetch('https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockBalanceSheet&data_id='+sid+'&start_date='+sd+'&token='+encodeURIComponent(tok))
+ .then(function(r){return r.json()}).then(function(j){
+  var m={};(j.data||[]).forEach(function(r2){if(r2.type==='Equity')m[r2.date]=r2.value;});
+  (window.__EQC=window.__EQC||{})[sid]=m;
+  if(window.cur&&cur.sid===sid&&typeof buildFund==='function')buildFund();
+ }).catch(function(){});
+}
+function buildFund(){
+ var mr=(cur.mr||[]).slice(),fs=cur.fs||[];
+ if(!mr.length&&!fs.length){$('fundsec').classList.add('hidden');return;}
+ $('fundsec').classList.remove('hidden');
+ var byYM={};
+ mr.forEach(function(r){byYM[r.revenue_year+'-'+r.revenue_month]=+r.revenue;});
+ mr.sort(function(a,b){return (a.revenue_year-b.revenue_year)||(a.revenue_month-b.revenue_month)});
+ var list=[];
+ mr.forEach(function(r){
+  var py=byYM[(r.revenue_year-1)+'-'+r.revenue_month];
+  var pm=list.length?list[list.length-1].rev:undefined;
+  list.push({y:r.revenue_year,m:r.revenue_month,rev:+r.revenue,
+   yoy:py?(+r.revenue/py-1)*100:NaN,mom:pm?(+r.revenue/pm-1)*100:NaN});});
+ function pt(x){return isNaN(x)?'—':'<span class="'+(x>=0?'pos':'neg')+'">'+(x>=0?'+':'')+x.toFixed(1)+'%</span>'}
+ var last6=list.slice(-6).reverse();
+ $('revtab').querySelector('tbody').innerHTML=last6.map(function(r){
+  return '<tr><td>'+r.y+'/'+String(r.m).padStart(2,'0')+'</td><td>'+(r.rev/1e8).toFixed(1)+'</td><td>'+pt(r.mom)+'</td><td>'+pt(r.yoy)+'</td></tr>';
+ }).join('')||'<tr><td colspan="4" style="text-align:center;color:#777">無月營收資料</td></tr>';
+ cur._rev12=list.slice(-12);drawRev(cur._rev12);
+ var byD={};fs.forEach(function(r){(byD[r.date]=byD[r.date]||{})[r.type]=+r.value;});
+ var ds=Object.keys(byD).sort();
+ if(!ds.length){$('qwrap').innerHTML='<div style="color:#777;font-size:12.5px">無季報資料(興櫃/ETF 或未公告)</div>';$('ytdline').textContent='';drawRev(cur._rev12);return;}
+ function qlab(d){return d.slice(0,4)+'Q'+Math.ceil(+d.slice(5,7)/3)}
+ function peer(d){return (+d.slice(0,4)-1)+d.slice(4)}
+ function met(d){var o=byD[d];if(!o||o.Revenue===undefined)return null;
+  var ni=(o.IncomeAfterTax!==undefined)?o.IncomeAfterTax:((o.IncomeAfterTaxes!==undefined)?o.IncomeAfterTaxes:NaN);
+  return{rev:o.Revenue,gm:o.GrossProfit!==undefined?o.GrossProfit/o.Revenue*100:NaN,
+   nm:isNaN(ni)?NaN:ni/o.Revenue*100,
+   ni:ni,
+   eps:o.EPS!==undefined?o.EPS:NaN};}
+ var last8=ds.slice(-8).reverse();
+ var isFin=last8.length>0&&last8.every(function(d){var o=byD[d];return o&&o.GrossProfit===undefined&&o.OperatingIncome===undefined});
+ var html;
+ if(isFin){
+  html='<div style="font-size:11.5px;color:#8fb8d7;margin-bottom:3px">金融業指標(銀行/證券/保險/金控無毛利率與營益率):淨利率=稅後淨利/淨收益;ROE=稅後淨利×4/股東權益(單季年化)</div>'
+   +'<table><thead><tr><th>季度</th><th>淨收益(千元)</th><th>稅後淨利(千元)</th><th>淨利率</th><th>ROE(年化)</th><th>EPS(元)</th></tr></thead><tbody>';
+  last8.forEach(function(d){var m=met(d);
+   if(!m){html+='<tr><td>'+qlab(d)+'</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>';return;}
+   var eqm=(window.__EQC||{})[cur.sid]||null;
+   var roe=(eqm&&eqm[d]>0&&!isNaN(m.ni))?(m.ni*4/eqm[d]*100):NaN;
+   html+='<tr><td>'+qlab(d)+'</td><td>'+Math.round(m.rev/1000).toLocaleString('en-US')+'</td><td class="'+(!isNaN(m.ni)&&m.ni<0?'neg':'')+'">'+(isNaN(m.ni)?'—':Math.round(m.ni/1000).toLocaleString('en-US'))+'</td><td>'+(isNaN(m.nm)?'—':m.nm.toFixed(1)+'%')+'</td><td>'+(isNaN(roe)?(((window.__EQC||{})[cur.sid])?'—':'…'):roe.toFixed(1)+'%')+'</td><td class="'+(!isNaN(m.eps)&&m.eps<0?'neg':'')+'">'+(isNaN(m.eps)?'—':m.eps.toFixed(2))+'</td></tr>';});
+  html+='</tbody></table>';
+ }else{
+  html='<table><thead><tr><th>季度</th><th>營收(千元)</th><th>毛利率</th><th>淨利率</th><th>EPS(元)</th></tr></thead><tbody>';
+  last8.forEach(function(d){var m=met(d);
+   if(!m){html+='<tr><td>'+qlab(d)+'</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>';return;}
+   html+='<tr><td>'+qlab(d)+'</td><td>'+Math.round(m.rev/1000).toLocaleString('en-US')+'</td><td>'+(isNaN(m.gm)?'—':m.gm.toFixed(1)+'%')+'</td><td>'+(isNaN(m.nm)?'—':m.nm.toFixed(1)+'%')+'</td><td class="'+(!isNaN(m.eps)&&m.eps<0?'neg':'')+'">'+(isNaN(m.eps)?'—':m.eps.toFixed(2))+'</td></tr>';});
+  html+='</tbody></table>';
+ }
+ $('qwrap').innerHTML=html;
+ if(isFin&&!(window.__EQC||{})[cur.sid])fetchEquity(cur.sid);
+ var curY=+ds[ds.length-1].slice(0,4);
+ var yq=ds.filter(function(d){return +d.slice(0,4)===curY});
+ var ytd=0,ok=true;yq.forEach(function(d){var m2=met(d);if(!m2||isNaN(m2.eps))ok=false;else ytd+=m2.eps;});
+ var pq=yq.map(peer),pv=0,pok=true;pq.forEach(function(d){var m3=met(d);if(!m3||isNaN(m3.eps))pok=false;else pv+=m3.eps;});
+ var t='['+curY+' YTD]累計 EPS(至 Q'+Math.ceil(+ds[ds.length-1].slice(5,7)/3)+')= '+(ok?ytd.toFixed(2):'—')+' 元';
+ if(ok&&pok&&pv>0)t+=';去年同期 '+pv.toFixed(2)+' 元 → '+((ytd/pv-1)>=0?'+':'')+((ytd/pv-1)*100).toFixed(1)+'%';
+ else if(ok&&pok)t+=';去年同期 '+pv.toFixed(2)+' 元';
+ $('ytdline').textContent=t;}
+
+function drawRev(rows){
+ var cv=$('revchart');if(!cv||!rows||!rows.length)return;
+ var dpr=window.devicePixelRatio||1,W=cv.clientWidth||300,H=150;
+ cv.width=W*dpr;cv.height=H*dpr;
+ var g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);
+ g.fillStyle='#0c0c0c';g.fillRect(0,0,W,H);
+ var padL=6,padR=46,padB=16,padT=8,bw=(W-padL-padR)/rows.length;
+ var mx=0;rows.forEach(function(r){if(r.rev>mx)mx=r.rev});if(!mx)mx=1;
+ var ymx=10;rows.forEach(function(r){if(!isNaN(r.yoy)&&Math.abs(r.yoy)>ymx)ymx=Math.abs(r.yoy)});
+ rows.forEach(function(r,i){
+  var h2=(r.rev/mx)*(H-padT-padB-8);
+  g.fillStyle='#2f6db3';g.fillRect(padL+i*bw+bw*0.18,H-padB-h2,bw*0.64,h2);});
+ var y0=padT+(ymx/(2*ymx))*(H-padT-padB);
+ g.strokeStyle='#333';g.setLineDash([3,3]);g.beginPath();g.moveTo(padL,y0);g.lineTo(W-padR,y0);g.stroke();g.setLineDash([]);
+ g.strokeStyle='#ffcf1a';g.lineWidth=1.6;g.beginPath();var st2=false;
+ rows.forEach(function(r,i){if(isNaN(r.yoy))return;
+  var x=padL+i*bw+bw/2,y=padT+(1-(r.yoy+ymx)/(2*ymx))*(H-padT-padB);
+  if(!st2){g.moveTo(x,y);st2=true}else g.lineTo(x,y);});
+ g.stroke();
+ g.fillStyle='#9a9a9a';g.font='9.5px sans-serif';g.textAlign='center';
+ rows.forEach(function(r,i){if(rows.length>8&&i%2)return;g.fillText(r.m+'月',padL+i*bw+bw/2,H-4);});
+ var lastY=rows[rows.length-1].yoy;
+ g.textAlign='left';g.fillStyle='#ffcf1a';
+ g.fillText('YoY '+(isNaN(lastY)?'—':(lastY>=0?'+':'')+lastY.toFixed(1)+'%'),W-padR+3,14);}
+
+function buildTable(){
+ var res=activeRes(),D=cur.D,n=D.n,v0=view.v0,v1=view.v1;
+ var tb=$('ttab').querySelector('tbody');tb.innerHTML='';
+ var all=res.closed.slice();if(res.openTr)all.push(res.openTr);
+ var shown=0,rows='';
+ for(var i=0;i<all.length;i++){var t=all[i];
+  var si=t.open?n-1:t.si;
+  var inWin=(t.bi!=null&&t.bi>=v0&&t.bi<v1)||(si>=v0&&si<v1);
+  if(!inWin)continue;
+  shown++;
+  var bi=t.bi,bp=D.o[bi]*1.001425,sp2=t.open?D.c[n-1]*0.995575:D.o[t.si]*0.995575;
+  rows+='<tr><td>'+shown+'</td><td>'+D.dates[bi]+(t.late?' <span style="color:#ffcf1a">補</span>':'')+'</td><td>'+bp.toFixed(2)+'</td>'
+   +'<td>'+(t.open?'<span style="color:#ffcf1a">持有中</span>':D.dates[t.si])+'</td><td>'+sp2.toFixed(2)+(t.open?'(現價)':'')+'</td>'
+   +'<td class="'+(t.net>=0?'pos':'neg')+'">'+(t.net*100).toFixed(1)+'%</td>'
+   +'<td>'+(t.net<0?'whipsaw':'')+(t.open?' 未平倉':'')+'</td></tr>';}
+ tb.innerHTML=rows||'<tr><td colspan="7" style="text-align:center;color:#777">目前顯示區間內無進出訊號</td></tr>';
+ var cAll=res.closed.length+(res.openTr?1:0);
+ $('tsum').textContent='表列=顯示區間內;全期間(約 '+D.dates[0]+' 起,5年多)共 '+cAll+' 筆、累積 '+res.cum+'%(期末未平倉以現價計)';}
+
+function fmtRange(){
+ var D=cur.D;
+ $('range').textContent='顯示 '+D.dates[view.v0]+' ~ '+D.dates[view.v1-1]+'('+(view.v1-view.v0)+'根)';
+ var span=view.v1-view.v0;
+ document.querySelectorAll('#viewbar .vb[data-s]').forEach(function(el){
+  var s=+el.dataset.s;el.classList.toggle('on',(s===0&&span>=cur.D.n)||(s>0&&span===Math.min(s,cur.D.n)));});}
+
+function clampView(){
+ var n=cur.D.n,span=view.v1-view.v0;
+ span=Math.max(30,Math.min(span,n));
+ if(view.v0<0)view.v0=0;
+ if(view.v0+span>n)view.v0=n-span;
+ if(view.v0<0){view.v0=0;span=n;}
+ view.v1=view.v0+span;}
+
+function setSpan(s){
+ var n=cur.D.n;
+ var span=s===0?n:Math.min(s,n);
+ view.v1=n;view.v0=n-span;
+ drawChart();buildTable();}
+
+function zoomAt(anchorFrac,factor){
+ var span=view.v1-view.v0,newSpan=Math.max(30,Math.min(cur.D.n,Math.round(span*factor)));
+ if(newSpan===span)return;
+ var anchor=view.v0+anchorFrac*span;
+ view.v0=Math.round(anchor-anchorFrac*newSpan);
+ view.v1=view.v0+newSpan;
+ clampView();drawChart();buildTable();}
+
+function panBars(db){
+ var span=view.v1-view.v0;
+ view.v0+=db;view.v1=view.v0+span;
+ clampView();drawChart();buildTable();}
+
+function smaAll(c,N){var out=new Array(c.length).fill(NaN),s=0;
+ for(var i=0;i<c.length;i++){s+=c[i];if(i>=N)s-=c[i-N];if(i>=N-1)out[i]=s/N;}
+ return out;}
+function drawChart(){
+ var cv=$('chart'),dpr=window.devicePixelRatio||1;
+ var W=cv.clientWidth||cv.parentNode.clientWidth,H=430;
+ cv.width=W*dpr;cv.height=H*dpr;
+ var g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);
+ g.fillStyle='#000';g.fillRect(0,0,W,H);
+ var D=cur.D,res=activeRes(),n=D.n;
+ if(!cur._ma)cur._ma={m20:smaAll(D.c,20),m60:smaAll(D.c,60),m120:smaAll(D.c,120)};
+ if(typeof xClear==='function')xClear();
+ clampView();
+ var v0=view.v0,v1=view.v1,m=v1-v0;
+ fmtRange();
+ var padL=8,padR=58,padT=10,padB=24,cw=(W-padL-padR)/m;
+ var lo=Infinity,hi=-Infinity;
+ for(var i=v0;i<v1;i++){if(D.l[i]<lo)lo=D.l[i];if(D.h[i]>hi)hi=D.h[i];
+  if(res.line[i]!=null){var b=(D.atr[i])||0;
+   if(res.line[i]-b<lo)lo=res.line[i]-b;if(res.line[i]+b>hi)hi=res.line[i]+b;}}
+ if($('ma')&&$('ma').checked&&cur._ma)for(var i9=v0;i9<v1;i9++){
+  var _m;_m=cur._ma.m20[i9];if(!isNaN(_m)){if(_m<lo)lo=_m;if(_m>hi)hi=_m;}
+  _m=cur._ma.m60[i9];if(!isNaN(_m)){if(_m<lo)lo=_m;if(_m>hi)hi=_m;}
+  _m=cur._ma.m120[i9];if(!isNaN(_m)){if(_m<lo)lo=_m;if(_m>hi)hi=_m;}}
+ var span=hi-lo||1;lo-=span*0.06;hi+=span*0.05;
+ function X(i){return padL+(i-v0)*cw+cw/2}
+ function Y(p){return padT+(hi-p)/(hi-lo)*(H-padT-padB)}
+ g.strokeStyle='#181818';g.fillStyle='#9a9a9a';g.font='10.5px sans-serif';g.textAlign='left';
+ for(var t2=0;t2<6;t2++){var pv=lo+(hi-lo)*t2/5,y=Y(pv);
+  g.beginPath();g.moveTo(padL,y);g.lineTo(W-padR,y);g.stroke();
+  g.fillText(pv.toFixed(pv>500?0:pv>50?1:2),W-padR+4,y+3);}
+ g.textAlign='center';var pm='',yearly=m>420;
+ for(var i2=v0;i2<v1;i2++){
+  var key=yearly?D.dates[i2].slice(0,4):D.dates[i2].slice(5,7);
+  if(key!==pm){pm=key;
+   g.fillStyle='#777';g.fillText(yearly?D.dates[i2].slice(0,4):D.dates[i2].slice(2,7).replace('-','/'),X(i2),H-8);
+   g.strokeStyle='#141414';g.beginPath();g.moveTo(X(i2),padT);g.lineTo(X(i2),H-padB);g.stroke();}}
+ function dline(arr,color,dash){g.strokeStyle=color;g.setLineDash(dash);g.lineWidth=1.3;g.beginPath();var started=false;
+  for(var i=v0;i<v1;i++){var v=arr[i];if(isNaN(v))continue;
+   var x1=padL+(i-v0)*cw,y=Y(v);
+   if(!started){g.moveTo(x1,y);started=true}else g.lineTo(x1,y);
+   g.lineTo(x1+cw,y);}
+  g.stroke();g.setLineDash([]);}
+ if($('dp').checked){dline(cur.dl.p5,'#ff5ca8',[6,4]);dline(cur.dl.p10,'#c13fff',[2,3]);}
+ if($('ds').checked){dline(cur.dl.s5,'#4fd8ff',[6,4]);dline(cur.dl.s10,'#3f7fd4',[2,3]);}
+ if($('wx')&&$('wx').checked&&cur.wei){
+  var WE=cur.wei,vE=(typeof v1!=='undefined')?v1:n;
+  var wline=function(arr,mask,color){g.strokeStyle=color;g.lineWidth=1.4;g.beginPath();var open9=false;
+   for(var iw=v0;iw<vE;iw++){if(!mask[iw]||isNaN(arr[iw])){open9=false;continue;}
+    var xw=padL+(iw-v0)*cw,yw=Y(arr[iw]);
+    if(!open9){g.moveTo(xw,yw);open9=true;}else g.lineTo(xw,yw);
+    g.lineTo(xw+cw,yw);}
+   g.stroke();};
+  wline(WE.P,WE.dP,'#3ef94a');
+  wline(WE.S,WE.dS,'#ffd700');
+  var star=function(x,y,col){g.strokeStyle=col;g.lineWidth=1.6;g.beginPath();
+   for(var k=0;k<10;k++){var r9=k%2?3:7,a9=Math.PI/2+k*Math.PI/5;
+    var px9=x+r9*Math.cos(a9),py9=y-r9*Math.sin(a9);
+    if(k===0)g.moveTo(px9,py9);else g.lineTo(px9,py9);}
+   g.closePath();g.stroke();};
+  for(var z9=0;z9<WE.buy.length;z9++){var bi9=WE.buy[z9];if(bi9>=v0&&bi9<vE)star(X(bi9),Y(D.l[bi9])+28,'#ffd700');}
+  for(var z8=0;z8<WE.sell.length;z8++){var si9=WE.sell[z8];if(si9>=v0&&si9<vE)star(X(si9),Y(D.h[si9])-28,'#00d5ff');}
+ }
+
+ if(!res.noBand)for(var i3=v0;i3<v1;i3++){var L2=res.line[i3];if(L2==null)continue;
+  var bb=(D.atr[i3])||0,col=res.dirs[i3]===1?'255,159,26':'34,197,94';
+  g.fillStyle='rgba('+col+',0.12)';
+  var x2=padL+(i3-v0)*cw;
+  g.fillRect(x2,Y(L2+bb),cw,Math.max(1,Y(L2-bb)-Y(L2+bb)));}
+ for(var i4=v0;i4<v1;i4++){
+  var op2=D.o[i4],cl2=D.c[i4],up=cl2>=op2,col2=up?'#ec4a4a':'#16b981';
+  g.strokeStyle=col2;g.lineWidth=1;
+  g.beginPath();g.moveTo(X(i4),Y(D.h[i4]));g.lineTo(X(i4),Y(D.l[i4]));g.stroke();
+  var bw=Math.max(1,cw*0.62),y1=Y(Math.max(op2,cl2)),y2=Y(Math.min(op2,cl2));
+  if(y2-y1<1)y2=y1+1;
+  if(cw>2.4){
+   if(up){g.fillStyle='#000';g.fillRect(X(i4)-bw/2,y1,bw,y2-y1);g.strokeRect(X(i4)-bw/2,y1,bw,y2-y1);}
+   else{g.fillStyle=col2;g.fillRect(X(i4)-bw/2,y1,bw,y2-y1);}}}
+ // 均線 MA20/60/120
+ if($('ma')&&$('ma').checked&&cur._ma){
+  var mline=function(arr,color){g.strokeStyle=color;g.lineWidth=1.2;g.beginPath();var on9=false;
+   for(var im=v0;im<v1;im++){var vv=arr[im];if(isNaN(vv)){on9=false;continue;}
+    var xm=X(im),ym=Y(vv);
+    if(!on9){g.moveTo(xm,ym);on9=true;}else g.lineTo(xm,ym);}
+   g.stroke();};
+  mline(cur._ma.m20,'#f0f0f0');mline(cur._ma.m60,'#3fa7ff');mline(cur._ma.m120,'#ff4fd8');
+ }
+ g.lineWidth=2.2;
+ var i5=v0;
+ while(i5<v1){
+  if(res.line[i5]==null){i5++;continue;}
+  var d0=res.dirs[i5],j5=i5;
+  g.strokeStyle=d0===1?'#ff9f1a':'#22c55e';g.beginPath();
+  var startX=padL+(i5-v0)*cw;g.moveTo(startX,Y(res.line[i5]));
+  while(j5<v1&&res.dirs[j5]===d0&&res.line[j5]!=null){
+   var xx=padL+(j5-v0)*cw;
+   g.lineTo(xx,Y(res.line[j5]));g.lineTo(xx+cw,Y(res.line[j5]));
+   j5++;}
+  g.stroke();i5=j5;}
+ function tri(x,y,upv,col){g.fillStyle=col;g.strokeStyle='#fff';g.lineWidth=0.7;g.beginPath();
+  if(upv){g.moveTo(x,y-6);g.lineTo(x-5.5,y+4);g.lineTo(x+5.5,y+4);}
+  else{g.moveTo(x,y+6);g.lineTo(x-5.5,y-4);g.lineTo(x+5.5,y-4);}
+  g.closePath();g.fill();g.stroke();}
+ function triH(x,y,upv,col){g.strokeStyle=col;g.lineWidth=1.7;g.beginPath();
+  if(upv){g.moveTo(x,y-6);g.lineTo(x-5.5,y+4);g.lineTo(x+5.5,y+4);}
+  else{g.moveTo(x,y+6);g.lineTo(x-5.5,y-4);g.lineTo(x+5.5,y-4);}
+  g.closePath();g.stroke();}
+ var all=res.closed.slice();if(res.openTr)all.push(res.openTr);
+ for(var z=0;z<all.length;z++){var tt=all[z];
+  if(tt.bi!=null&&tt.bi>=v0&&tt.bi<v1)tri(X(tt.bi),Y(D.l[tt.bi])+14,true,'#ff4444');
+  if(!tt.open&&tt.si>=v0&&tt.si<v1)tri(X(tt.si),Y(D.h[tt.si])-14,false,'#00e676');}
+ for(var z2=0;z2<all.length;z2++){var t3=all[z2];
+  if(t3.bi!=null&&t3.bi-1>=v0&&t3.bi-1<v1)triH(X(t3.bi-1),Y(D.l[t3.bi-1])+15,true,'#ff8888');
+  if(!t3.open&&t3.si-1>=v0&&t3.si-1<v1)triH(X(t3.si-1),Y(D.h[t3.si-1])-15,false,'#7fe0b0');}
+ var st9=res.state;
+ if(v1===n){
+  if(st9.flip_i===n-1){
+   var gated9=$('e3').checked&&!(st9.adx>20);
+   if(st9.dir===1&&!gated9)triH(X(n-1),Y(D.l[n-1])+15,true,'#ff8888');
+   if(st9.dir===-1&&st9.holding)triH(X(n-1),Y(D.h[n-1])-15,false,'#7fe0b0');}
+  else if(st9.pend&&st9.adx>20)triH(X(n-1),Y(D.l[n-1])+15,true,'#ff8888');}
+// ---- 十字線覆蓋層尺寸與幾何快取 ----
+ var ov=$('xhair');
+ ov.width=W*dpr;ov.height=H*dpr;ov.style.width=W+'px';ov.style.height=H+'px';
+ GEO={W:W,H:H,padL:padL,padR:padR,padT:padT,padB:padB,cw:cw,hi:hi,lo:lo,v0:v0,v1:v1};
+}
+
+var GEO=null,dragSt=null,tcState=null;
+function xClear(){var ov=$('xhair'),og=ov.getContext('2d');og.setTransform(1,0,0,1,0,0);og.clearRect(0,0,ov.width,ov.height);$('tip').style.display='none';$('readout').textContent=' ';}
+function xhairShow(mx2,my2,isTouch){
+ if(!cur||!GEO)return;
+ var res=activeRes(),D=cur.D,G=GEO,dpr=window.devicePixelRatio||1;
+ var ov=$('xhair'),og=ov.getContext('2d');og.setTransform(dpr,0,0,dpr,0,0);
+ var xi=Math.floor((mx2-G.padL)/G.cw)+G.v0;
+ og.clearRect(0,0,G.W,G.H);
+ var tip=$('tip');
+ if(xi<G.v0||xi>=G.v1||mx2<G.padL||mx2>G.W-G.padR||my2<G.padT||my2>G.H-G.padB){tip.style.display='none';$('readout').textContent=' ';return;}
+ var vx=G.padL+(xi-G.v0)*G.cw+G.cw/2;
+ og.strokeStyle='#9a9a9a';og.lineWidth=0.8;og.setLineDash([4,4]);
+ og.beginPath();og.moveTo(vx,G.padT);og.lineTo(vx,G.H-G.padB);og.stroke();
+ og.beginPath();og.moveTo(G.padL,my2);og.lineTo(G.W-G.padR,my2);og.stroke();og.setLineDash([]);
+ var pv=G.hi-(my2-G.padT)/(G.H-G.padT-G.padB)*(G.hi-G.lo);
+ og.fillStyle='#2a2a2a';og.fillRect(G.W-G.padR+1,my2-9,G.padR-2,18);
+ og.fillStyle='#ffd37a';og.font='10.5px sans-serif';og.textAlign='left';
+ og.fillText(pv.toFixed(pv>500?0:pv>50?1:2),G.W-G.padR+4,my2+3.5);
+ og.fillStyle='#2a2a2a';og.fillRect(vx-32,G.H-G.padB+2,64,15);
+ og.fillStyle='#ddd';og.textAlign='center';og.fillText(D.dates[xi].slice(5),vx,G.H-G.padB+13);
+ var chg=xi>0?((D.c[xi]/D.c[xi-1]-1)*100):NaN,up2=!isNaN(chg)&&chg>=0;
+ tip.innerHTML='<b>'+D.dates[xi]+'</b><br>開 '+D.o[xi].toFixed(2)+'  高 '+D.h[xi].toFixed(2)+'<br>低 '+D.l[xi].toFixed(2)+'  收 <span style="color:'+(up2?'#ff6b6b':'#2edc9c')+'">'+D.c[xi].toFixed(2)+(isNaN(chg)?'':' ('+(chg>=0?'+':'')+chg.toFixed(2)+'%)')+'</span>';
+ if($('ma')&&$('ma').checked&&cur._ma){var f9=function(v){return isNaN(v)?'—':v.toFixed(2)};
+  tip.innerHTML+='<br><span style="color:#f0f0f0">MA20 '+f9(cur._ma.m20[xi])+'</span> <span style="color:#3fa7ff">60 '+f9(cur._ma.m60[xi])+'</span> <span style="color:#ff4fd8">120 '+f9(cur._ma.m120[xi])+'</span>';}
+ tip.style.display='block';
+ var tw=tip.offsetWidth,lx=vx+(isTouch?22:16);if(lx+tw>G.W-G.padR-4)lx=vx-tw-(isTouch?22:16);
+ tip.style.left=Math.max(2,lx)+'px';
+ tip.style.top=(isTouch?Math.max(6,my2-130):Math.max(6,Math.min(my2-34,G.H-100)))+'px';
+ var b2=(D.atr[xi])||0,L3=res.line[xi];
+ $('readout').textContent=D.dates[xi]+'  開'+D.o[xi].toFixed(2)+' 高'+D.h[xi].toFixed(2)+' 低'+D.l[xi].toFixed(2)+' 收'+D.c[xi].toFixed(2)
+  +(L3!=null?('|階梯 '+L3.toFixed(2)+' 帶['+(L3-b2).toFixed(2)+'~'+(L3+b2).toFixed(2)+']'+(res.dirs[xi]===1?' 多方':' 空方')):'');}
+function bindChart(){
+ var cv=$('chart');
+ cv.onmousedown=function(ev){if(!cur)return;dragSt={x0:ev.clientX,v0:view.v0};cv.classList.add('grab');ev.preventDefault();};
+ window.addEventListener('mouseup',function(){dragSt=null;cv.classList.remove('grab');});
+ cv.onmousemove=function(ev){
+  if(!cur||!GEO)return;
+  var rect=cv.getBoundingClientRect();
+  if(dragSt){
+   var db=Math.round(-(ev.clientX-dragSt.x0)/GEO.cw);
+   var span=view.v1-view.v0,nv0=dragSt.v0+db;
+   if(nv0<0)nv0=0;if(nv0+span>cur.D.n)nv0=cur.D.n-span;
+   if(nv0!==view.v0){view.v0=nv0;view.v1=nv0+span;drawChart();buildTable();}
+   return;}
+  xhairShow(ev.clientX-rect.left,ev.clientY-rect.top,false);};
+ cv.onmouseleave=function(){if(!dragSt)xClear();};
+ cv.onwheel=function(ev){
+  if(!cur||!GEO)return;ev.preventDefault();
+  var rect=cv.getBoundingClientRect(),mx=ev.clientX-rect.left;
+  var frac=Math.max(0,Math.min(1,(mx-GEO.padL)/(GEO.W-GEO.padL-GEO.padR)));
+  zoomAt(frac,ev.deltaY>0?1.18:1/1.18);};
+ cv.ontouchstart=function(ev){
+  if(!cur||!GEO)return;
+  if(ev.touches.length===2){
+   var a=ev.touches[0],b3=ev.touches[1];
+   tcState={d:Math.hypot(a.clientX-b3.clientX,a.clientY-b3.clientY),
+    cx:(a.clientX+b3.clientX)/2,v0:view.v0,span:view.v1-view.v0};
+   xClear();
+   if(ev.cancelable)ev.preventDefault();return;}
+  tcState=null;
+  var t=ev.touches[0];if(!t)return;
+  var rect=cv.getBoundingClientRect();
+  xhairShow(t.clientX-rect.left,t.clientY-rect.top,true);
+  if(ev.cancelable)ev.preventDefault();};
+ cv.ontouchmove=function(ev){
+  if(!cur||!GEO)return;
+  if(ev.touches.length===2&&tcState){
+   var a=ev.touches[0],b4=ev.touches[1];
+   var nd=Math.hypot(a.clientX-b4.clientX,a.clientY-b4.clientY);
+   var ncx=(a.clientX+b4.clientX)/2;
+   var newSpan=Math.max(30,Math.min(cur.D.n,Math.round(tcState.span*tcState.d/Math.max(20,nd))));
+   var db2=Math.round(-(ncx-tcState.cx)/GEO.cw);
+   view.v0=tcState.v0+db2+Math.round((tcState.span-newSpan)/2);
+   view.v1=view.v0+newSpan;
+   clampView();drawChart();buildTable();
+   if(ev.cancelable)ev.preventDefault();return;}
+  if(tcState)return;
+  var t=ev.touches&&ev.touches[0];if(!t)return;
+  var rect=cv.getBoundingClientRect();
+  xhairShow(t.clientX-rect.left,t.clientY-rect.top,true);
+  if(ev.cancelable)ev.preventDefault();};
+ cv.ontouchend=function(){tcState=null;};
+}
+
+function GPAL(g){var GO=window.GORDER||[];var i=GO.indexOf(g);return i<0?'#999':'hsl('+Math.round(i*360/Math.max(1,GO.length))+',62%,62%)'}
+function TIP(sid,o){o=o||{};var seg=[];
+ var wv=(window.WVAL&&window.WVAL[sid]!=null)?window.WVAL[sid]:null;
+ if(wv!=null)seg.push('上週成交'+wv+'億');
+ if(o.fund!=null||o.flow!=null)seg.push('基本面'+(o.fund?'O':'X')+' 資金流'+(o.flow?'O':'X'));
+ if(o.dir!=null)seg.push('B版:'+(o.dir===1?'多方':'空方')+(o.flip?('('+o.flip+(o.dir===1?'翻多':'翻空')+')'):''));
+ if(o.adx!=null)seg.push('ADX '+o.adx);
+ if(o.tr!=null)seg.push('未平倉'+(o.tr>=0?'+':'')+o.tr+'%');
+ if(o.note)seg.push(o.note);
+ return seg.join('|');}
+function buildWatch(){
+ var GC={'B':'#ff9f1a','B+E3':'#ffd37a','BC':'#4fd8ff','BC+E3':'#9ecbff','W':'#3ef94a','息':'#8fd7bd','弱':'#c9a0ff','避':'#ff6b6b','新':'#999'};
+ var GT={'B':'B v2(統一)','B+E3':'B+E3','BC':'BC 版','BC+E3':'BC+E3','W':'W 法人線','息':'抱息','弱':'弱適配','避':'避開','新':'資料不足'};
+ var F=window.DFILT||{},SC=(window.SCANST&&window.SCANST.m)||{};
+ var html='';
+ GR.forEach(function(pair){
+  var g=pair[0],ids=pair[1];if(!ids.length)return;
+  html+='<span class="ghead" style="color:'+GC[g]+'">'+GT[g]+'('+ids.length+')</span>';
+  ids.forEach(function(sid){
+   var gm=(window.GMAP&&window.GMAP[sid])||'—',pc=GPAL(gm);
+   var sc=SC[sid]||null;
+   var tip=TIP(sid,{fund:(F.fund||[]).indexOf(sid)>-1,flow:(F.flow||[]).indexOf(sid)>-1,
+     dir:sc?sc[0]:null,flip:sc?sc[1]:null,adx:sc?sc[2]:null,tr:(sc&&sc[3]!=null)?sc[3]:null});
+   html+='<span class="stk" data-id="'+sid+'" title="'+tip+'" style="border-color:'+pc+'66">'+sid+' '+esc(VD[sid][0])+'<b style="color:'+pc+'"> ・'+gm+'</b></span>';});
+  html+='<br>';});
+ $('watch').innerHTML=html;
+ $('watch').querySelectorAll('.stk').forEach(function(el){
+  el.onclick=function(){selectStock(el.dataset.id)};});}
+
+function selectStock(sid){
+ var v=VD[sid];if(!v)return;
+ var GC={'B':'#ff9f1a','B+E3':'#ffd37a','BC':'#4fd8ff','BC+E3':'#9ecbff','W':'#3ef94a','息':'#8fd7bd','弱':'#c9a0ff','避':'#ff6b6b','新':'#999'};
+ $('watch').querySelectorAll('.stk').forEach(function(el){
+  var on=el.dataset.id===sid;
+  el.classList.toggle('on',on);
+  el.style.background='';});
+ setMode('B');$('e3').checked=false;if($('w2'))$('w2').checked=false;
+ query(sid,v[0]);}
+
+$('modeSeg').querySelectorAll('span').forEach(function(el){
+ el.onclick=function(){setMode(el.dataset.m);if(cur)render();};});
+$('e3').onchange=function(){if(cur)render();};
+$('wx').onchange=function(){if(cur)render()};
+$('w2').onchange=function(){if(cur)render()};
+$('dp').onchange=function(){if(cur)drawChart()};
+$('ds').onchange=function(){if(cur)drawChart()};
+if($('ma'))$('ma').onchange=function(){if(cur)drawChart()};
+(function(){var ti=document.getElementById('toIndex');if(!ti)return;
+ if(location.protocol==='file:')ti.href='大戶線查詢台.html';
+ else if(location.hostname.indexOf('netlify.app')>-1)ti.href='/query';
+ else if(location.hostname.indexOf('github.io')>-1)ti.href=(location.pathname.indexOf('/watch/')>-1?'../query.html':'query.html');})();
+(function(){try{var s=localStorage.getItem('fm_tok');if(s&&$('tok')){$('tok').value=s;if($('tokSave'))$('tokSave').checked=true;}}catch(e){}
+ function svTok(){try{if($('tokSave')&&$('tokSave').checked&&$('tok').value.trim())localStorage.setItem('fm_tok',$('tok').value.trim());else localStorage.removeItem('fm_tok');}catch(e){}}
+ if($('tok'))$('tok').addEventListener('change',svTok);
+ if($('tokSave'))$('tokSave').addEventListener('change',svTok);
+ function nmLoc(s){var hit=null;function scan(arr){if(hit||!arr)return;for(var i=0;i<arr.length;i++){var it=arr[i];if(it&&it.sid&&it.n===s){hit=[it.sid,it.n];return}}}
+  scan(window.WATCH&&window.WATCH.items);scan(window.GEXP&&window.GEXP.items);return hit;}
+ function doQuery(){var s=$('q').value.trim().replace(/\s+/g,'');if(!s)return;
+  var sid=null,nm=null;
+  if(/^\d{4,6}$/.test(s)){sid=s;nm=(VD[s]&&VD[s][0])||s;}
+  else{for(var k in VD){if(VD[k][0]===s){sid=k;nm=VD[k][0];break;}}
+   if(!sid)for(var k2 in VD){if(VD[k2][0].indexOf(s)>-1){sid=k2;nm=VD[k2][0];break;}}
+   if(!sid){var lh=nmLoc(s);if(lh){sid=lh[0];nm=lh[1];}}}
+  if(!sid){(async function(){try{$('msg').textContent='全市場名稱查詢中…';if(!window.__nmTbl){var raw=await fm('TaiwanStockInfo',{});var mp={},seen={};for(var z=0;z<raw.length;z++){var rz=raw[z],idz=String(rz.stock_id||''),nz=String(rz.stock_name||'');if(!/^\d{4,6}$/.test(idz)||!nz||seen[idz])continue;seen[idz]=1;mp[idz]=nz;}window.__nmTbl=mp;}var mpN=window.__nmTbl,hid=null,hnm=null,subs=[];for(var idq in mpN){var nv=mpN[idq];if(nv===s){hid=idq;hnm=nv;break;}if(nv.indexOf(s)>-1)subs.push([idq,nv]);}if(!hid&&subs.length){subs.sort(function(a,b){return a[1].length-b[1].length||(a[0]<b[0]?-1:1)});hid=subs[0][0];hnm=subs[0][1];if(subs.length>1)$('msg').textContent='多筆符合:'+subs.slice(0,6).map(function(x){return x[0]+' '+x[1]}).join('、')+(subs.length>6?'…':'')+' → 取 '+hid+' '+hnm;else $('msg').textContent='';}else if(hid)$('msg').textContent='';if(!hid){$('msg').textContent='查無「'+s+'」——名稱與代碼皆未命中(名稱依 FinMind 短名,如 長榮航、統一超)';return;}if(VD[hid])selectStock(hid);else query(hid,hnm);}catch(eN){$('msg').textContent='名稱查詢失敗:'+(eN&&eN.message||eN)+';請改輸入代碼';}})();return;}
+  if(VD[sid])selectStock(sid);
+  else if(nm&&nm!==sid){query(sid,nm);}
+  else{(async function(){var n2=nm;try{var inf=await fm('TaiwanStockInfo',{data_id:sid});if(inf&&inf.length&&inf[0].stock_name)n2=inf[0].stock_name;}catch(e){}query(sid,n2);})();}}
+ if($('goq'))$('goq').onclick=doQuery;
+ if($('q'))$('q').addEventListener('keydown',function(e){if(e.key==='Enter')doQuery();});})();
+document.querySelectorAll('#viewbar .vb[data-s]').forEach(function(el){
+ el.onclick=function(){if(cur)setSpan(+el.dataset.s)};});
+document.querySelectorAll('#viewbar .vb[data-z]').forEach(function(el){
+ el.onclick=function(){if(cur)zoomAt(0.5,el.dataset.z==='in'?1/1.35:1.35)};});
+
+function lastBarStale(){
+ if(!cur||!cur.bars||!cur.bars.length)return false;
+ var d=new Date(),dow=d.getDay();
+ if(dow===0||dow===6)return false;
+ var hm=d.getHours()*60+d.getMinutes();
+ if(hm<13*60+45)return false;
+ var today=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+ return cur.bars[cur.bars.length-1].d<today;
+}
+setInterval(function(){
+ if(document.hidden||!cur)return;
+ var d=new Date(),hm=d.getHours()*60+d.getMinutes(),dow=d.getDay();
+ if(dow===0||dow===6)return;
+ if(hm>=13*60+45&&hm<=18*60+30&&lastBarStale()){
+  $('msg').textContent='收盤後自動檢查今日資料…';
+  query(cur.sid,cur.name);}
+},30*60*1000);
+var lastFetch=0;
+function maybeRefresh(){if(document.hidden)return;
+ if(cur&&Date.now()-lastFetch>10*60*1000){$('msg').textContent='資料超過10分鐘,自動更新 '+cur.sid+' …';query(cur.sid,cur.name);}}
+document.addEventListener('visibilitychange',maybeRefresh);
+window.addEventListener('focus',maybeRefresh);
+window.addEventListener('resize',function(){if(cur){drawChart();if(cur._rev12)drawRev(cur._rev12);}});
+buildWatch();
+bindChart();
+selectStock('2330');
+(function(){try{var R=window.ROT;if(!R||!R.groups)return;
+ var st=document.createElement('style');st.textContent='.rotsig{color:#ffb066;cursor:pointer;text-decoration:underline;margin:0 3px;font-weight:600}.rotsig.s{color:#2edc9c}.rotsig.ex{opacity:.62;text-decoration:underline dotted;font-weight:500}.stk.flash{animation:stkflash .8s ease-in-out 3}.stk.lit:not(.on){border-color:#ffe08a!important;background:#332608!important;color:#ffe08a!important;box-shadow:0 0 0 2px #ffe08a,0 0 14px rgba(255,224,138,.8)!important;animation:litpulse 1.4s ease-in-out infinite}@keyframes litpulse{0%,100%{box-shadow:0 0 0 2px #ffe08a,0 0 6px rgba(255,224,138,.45)}50%{box-shadow:0 0 0 3px #ffd37a,0 0 20px rgba(255,224,138,.95)}}@keyframes stkflash{0%,100%{background:#141414;box-shadow:none}50%{background:#c8501e;color:#000;box-shadow:0 0 12px #c8501e}}';document.head.appendChild(st);
+ var el=document.getElementById('rotpanel'),gr=document.getElementById('rotgrid');
+ document.getElementById('rotmeta').textContent='(近'+(R.win||5)+'個交易日之預選策略訊號|資料日 '+R.date+'|分母=該族群檔數(核心109+觀察名單+族群補充成員,每族群≥5)|每晚20:00掃描後更新|點代碼→下方對應名單亮燈(再點取消),由你決定是否點選載入|淡色虛線底線=族群補充成員,僅計密度、不做操作訊號,不會出現在下方名單'+(R.note?'|'+R.note:'')+')';
+ var gs=R.groups.slice().sort(function(a,b){return (b.buy.length/b.n)-(a.buy.length/a.n)||(b.sell.length/b.n)-(a.sell.length/a.n)});
+ function flash(id){var chip=document.querySelector('#watch .stk[data-id="'+id+'"]');
+  var CLR=function(){document.querySelectorAll('#watch .stk.lit,#filtgrid .lit,#wtgrid .lit').forEach(function(c){c.classList.remove('lit')})};
+  var LIT=function(t){t.classList.add('lit');t.classList.remove('flash');void t.offsetWidth;t.classList.add('flash');
+   setTimeout(function(){t.classList.remove('flash')},2600)};
+  if(!chip){
+   // 觀察名單 / ★雙過∩B多方:先亮燈提示所在位置,再點該標籤才叫出 K 線
+   var tg=[].slice.call(document.querySelectorAll('#filtgrid .fp[data-id="'+id+'"],#wtgrid .wt[data-id="'+id+'"]'));
+   if(tg.length){
+    var wasL=tg[0].classList.contains('lit');
+    CLR(); if(wasL)return;
+    tg.forEach(LIT); tg[0].scrollIntoView({block:'nearest'});
+    return;}
+   // 族群補充成員:不在任何名單面板,直接開 K 線
+   var gn=id;
+   if(window.GEXP&&GEXP.items){var it=GEXP.items.filter(function(x){return x.sid===id})[0];if(it)gn=it.n;}
+   if(typeof query==='function')query(id,gn);return;}
+  chip.scrollIntoView({block:'nearest'});
+  var was=chip.classList.contains('lit');
+  CLR();
+  if(was)return;
+  LIT(chip);}
+ var EXS={};if(window.GEXP&&GEXP.items)GEXP.items.forEach(function(x){EXS[x.sid]=1});
+ gs.forEach(function(g){var b=g.buy.length,s=g.sell.length;
+  var col=b>0?(b/g.n>=0.4?'#ff6b6b':'#ffb066'):(s>0?'#2edc9c':'#555');
+  var d=document.createElement('span');
+  d.style.cssText='border:1px solid '+(b>0?'#5a2a1a':(s>0?'#1a4a3a':'#262626'))+';border-radius:9px;padding:4px 9px;font-size:12px;background:#101010;color:#bbb';
+  var h='<b style="color:'+col+'">'+g.g+' 買'+b+'/'+g.n+'</b>';
+  g.buy.forEach(function(x){h+='<span class="rotsig'+(EXS[x[0]]?' ex':'')+'" data-id="'+x[0]+'" title="'+x[1]+' 買訊 '+x[2]+(EXS[x[0]]?' ・族群補充成員(僅計密度,不做操作訊號,不在下方名單中)':'')+'">'+x[0]+'</span>';});
+  if(s>0){h+=' <b style="color:#2edc9c">賣'+s+'/'+g.n+'</b>';g.sell.forEach(function(x){h+='<span class="rotsig s'+(EXS[x[0]]?' ex':'')+'" data-id="'+x[0]+'" title="'+x[1]+' 賣訊 '+x[2]+(EXS[x[0]]?' ・族群補充成員(僅計密度,不做操作訊號,不在下方名單中)':'')+'">'+x[0]+'</span>';});}
+  d.innerHTML=h;gr.appendChild(d);});
+ gr.addEventListener('click',function(ev){var t=ev.target;if(t&&t.classList&&t.classList.contains('rotsig'))flash(t.dataset.id);});
+ el.style.display='block';}catch(e){}})();
+
+(function(){try{
+ var F=window.DFILT,G=window.GMAP;if(!F)return;
+ var W=window.WATCH,WB=(W&&W.watchBothB)||[];
+ var LB=(F.bothB||F.both||[]).concat(WB.filter(function(s){return (F.bothB||[]).indexOf(s)<0}));
+ if(!LB.length)return;
+ var WSET={};WB.forEach(function(s){WSET[s]=1});
+ var GO=window.GORDER||[],pal={};
+ GO.forEach(function(g,i){pal[g]='hsl('+Math.round(i*360/Math.max(1,GO.length))+',62%,62%)'});
+ var el=document.getElementById('filtpanel'),grid=document.getElementById('filtgrid');
+ if(!el||!grid)return;
+ var wn={};if(W&&W.items)W.items.forEach(function(it){wn[it.sid]=it.n});
+ document.getElementById('filtmeta').textContent='('+F.date+' 夜掃|共 '+LB.length+' 檔(核心 '+(F.bothB||[]).length+'+觀察 '+WB.length+'◇)|進:雙過濾網∧B版多方|出:B版賣訊或雙濾網全失→紅色提醒|點擊開 K 線)';
+ var html='';
+ LB.forEach(function(sid){
+  var nm=(window.VD&&VD[sid])?VD[sid][0]:(wn[sid]||sid);
+  var g=(G&&G[sid])||'—',c=pal[g]||'#999';
+  var mk=WSET[sid]?'<span style="color:#7ab8ff">◇</span>':'';
+  html+='<span class="stk fp" data-id="'+sid+'" data-nm="'+nm+'" title="'+(WSET[sid]?'觀察名單來源(週流動性輪動)':'109 核心')+'" style="border:1px solid '+c+';border-radius:8px;padding:3px 9px;cursor:pointer;font-size:12.5px;background:#141414">'
+   +mk+sid+' '+nm+'<b style="color:'+c+'"> ・'+g+'</b></span>'});
+ grid.innerHTML=html;el.style.display='block';
+ grid.querySelectorAll('.fp').forEach(function(x){
+  x.onclick=function(){var sid=x.dataset.id;
+   if(window.VD&&VD[sid]&&typeof selectStock==='function')selectStock(sid);
+   else if(typeof query==='function')query(sid,x.dataset.nm||sid)}});
+ var T=window.DTRACK;
+ if(T&&T.exits&&T.exits.length){
+  var cut=new Date();cut.setDate(cut.getDate()-14);var cs=cut.toISOString().slice(0,10);
+  var ex=T.exits.filter(function(e){return e.d>=cs});
+  if(ex.length){var fw=document.getElementById('fxwrap'),fg=document.getElementById('fxgrid');
+   if(fw&&fg){var xh='';
+    ex.forEach(function(e){var nm=(window.VD&&VD[e.sid])?VD[e.sid][0]:e.sid;
+     xh+='<span class="stk fx" data-id="'+e.sid+'" style="border:1px solid #e05252;border-radius:8px;padding:3px 9px;cursor:pointer;font-size:12.5px;background:#1a0f0f;color:#ffb3b3">'+e.sid+' '+nm+' ・'+e.why+' '+e.d.slice(5).replace('-','/')+'</span>'});
+    fg.innerHTML=xh;fw.style.display='block';
+    document.getElementById('fxmeta').textContent='(近14天帶出;點擊開 K 線;僅供研究)';
+    fg.querySelectorAll('.fx').forEach(function(x){x.onclick=function(){var sid=x.dataset.id;
+     if(window.VD&&VD[sid]&&typeof selectStock==='function')selectStock(sid);
+     else if(typeof query==='function')query(sid,sid)}});}}}
+}catch(e){}})();
+(function(){try{
+ var W=window.WATCH;if(!W||!W.items||!W.items.length)return;
+ var el=document.getElementById('filtpanel'),ww=document.getElementById('wtwrap'),wg=document.getElementById('wtgrid');
+ if(!ww||!wg)return;if(el)el.style.display='block';
+ var nB=(W.watchBothB||[]).length;
+ document.getElementById('wtmeta').textContent='('+W.date+'|'+W.week+'|每週一滾動更新名單與基本面;其中 '+nB+' 檔已列於上方 ★雙過濾網∩B多方;☆=雙過濾網但B版仍空方(待翻多);滑鼠停留看濾網/ADX/未平倉;點擊開 K 線)';
+ var h='';
+ var srt=W.items.slice().sort(function(a,b){var sa=(a.fund&&a.flow&&a.dir!==1)?0:1,sb=(b.fund&&b.flow&&b.dir!==1)?0:1;return sa-sb||b.v-a.v});
+ srt.forEach(function(it){
+  var gm=(window.GMAP&&window.GMAP[it.sid])||it.cat,pc=(typeof GPAL==='function')?GPAL(gm):'#999';
+  var half=it.fund&&it.flow&&it.dir!==1;
+  var tip=(typeof TIP==='function')?TIP(it.sid,{fund:it.fund,flow:it.flow,dir:it.dir,flip:it.flip,adx:it.adx,tr:it.tr,note:it.cat+'('+it.mkt+')'}):'';
+  h+='<span class="stk wt" data-id="'+it.sid+'" data-nm="'+it.n+'" title="'+tip+'" style="border:1px solid '+pc+'66;border-radius:8px;padding:3px 9px;cursor:pointer;font-size:12.5px;background:#141414;color:#ddd">'
+   +(half?'<b style="color:#c9a24a">☆</b>':'')+it.sid+' '+it.n+'<b style="color:'+pc+'"> ・'+gm+'</b></span>';
+ });
+ wg.innerHTML=h;ww.style.display='block';
+ wg.querySelectorAll('.wt').forEach(function(x){x.onclick=function(){var sid=x.dataset.id,nm=x.dataset.nm;
+  if(window.VD&&VD[sid]&&typeof selectStock==='function')selectStock(sid);
+  else if(typeof query==='function')query(sid,nm||sid)}});
+}catch(e){}})();
+
+(function(){var a=document.getElementById('idxBtn');if(!a)return;a.href=(location.protocol==='file:')?'大盤儀表板.html':'/market.html';a.target='_blank';})();
+</script>
+</body>
+</html>

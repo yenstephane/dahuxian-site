@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta name="robots" content="noindex,nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>台股大盤儀表板|大戶線</title>
+<style>
+:root{--bg:#0a0a0a;--panel:#111;--line:#2a2a2a;--tx:#e8e8e8;--dim:#9a9a9a;--up:#ec4a4a;--dn:#16b981;--gold:#ffd37a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.55 "Noto Sans TC",system-ui,sans-serif}
+#hd{display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid #1c1c1c;flex-wrap:wrap}
+#hd a{color:var(--gold);text-decoration:none;font-size:13px}
+#hd h1{font-size:17px;margin:0}
+#now{font-size:15px;color:#ddd}
+#now b.px{font-size:22px;color:#fff}
+.sec{padding:10px 16px;border-bottom:1px solid #161616}
+canvas{width:100%;display:block;cursor:crosshair}
+#infobar{font-size:12.5px;color:#bbb;background:#0e0e0e;border:1px solid #202020;border-radius:6px;padding:4px 10px;margin-bottom:6px;min-height:24px}
+#zbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+#zbar button{background:#16161e;border:1px solid #33334a;color:#bcd;border-radius:7px;padding:3px 11px;font-size:12.5px;cursor:pointer}
+#zbar button:hover{background:#20202e}
+#zbar .hint{font-size:11px;color:#777}
+table{border-collapse:collapse;font-size:12.5px;width:100%}
+th,td{border-bottom:1px solid #1e1e1e;padding:4px 8px;text-align:right;white-space:nowrap}
+th{color:#9a9a9a;font-weight:600}
+td:first-child,th:first-child{text-align:left}
+.pos{color:var(--up)}.neg{color:var(--dn)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px}
+.note{font-size:11px;color:#777;margin-top:4px}
+#msg{color:#ffb066;font-size:13px;padding:6px 16px}
+.legend{font-size:11.5px;color:#9a9a9a;margin-bottom:2px}
+.legend b{font-weight:600}
+h2{font-size:14px;color:#c9c9c9;margin:0 0 6px}
+</style>
+</head>
+<body>
+<div id="hd">
+ <a id="back" href="/">← 個股操盤台</a>
+ <h1>台股大盤儀表板</h1>
+ <span id="now">載入中…</span>
+</div>
+<div id="msg"></div>
+<div class="sec">
+ <div id="zbar">
+  <button id="zi" type="button">＋ 放大</button>
+  <button id="zo" type="button">－ 縮小</button>
+  <button id="pl" type="button">◀ 過去</button>
+  <button id="pr" type="button">▶ 近期</button>
+  <button id="r3" type="button">近3月</button>
+  <button id="r6" type="button">近6月</button>
+  <button id="r12" type="button">近1年</button>
+  <button id="rall" type="button">全部(3年)</button>
+  <span class="hint">滾輪=縮放(以滑鼠為中心)|按住拖曳=平移|雙擊=重置</span>
+ </div>
+ <div id="infobar">將滑鼠移到 K 線上查看各日數值(十字線連動下方副圖)</div>
+ <div class="legend"><b style="color:#e8e8e8">加權指數日K</b>|MA <b style="color:#ffd37a">5</b> <b style="color:#4fd8ff">20</b> <b style="color:#3ef94a">60</b> <b style="color:#c9a0ff">120</b> <b style="color:#ff9f1a">240</b></div>
+ <canvas id="cvK" style="height:300px"></canvas>
+ <div class="legend"><b>KD(9,3,3)</b> <span style="color:#ffd37a">K</span>/<span style="color:#4fd8ff">D</span></div>
+ <canvas id="cvKD" style="height:90px"></canvas>
+ <div class="legend"><b>MACD(12,26,9)</b> <span style="color:#ffd37a">DIF</span>/<span style="color:#4fd8ff">MACD</span>/柱=OSC</div>
+ <canvas id="cvMACD" style="height:90px"></canvas>
+ <div class="legend"><b>成交金額(億)</b>+均額 <span style="color:#ffd37a">5日</span>/<span style="color:#4fd8ff">10日</span></div>
+ <canvas id="cvVOL" style="height:90px"></canvas>
+ <div class="legend"><b>融資餘額(億)</b></div>
+ <canvas id="cvMG" style="height:90px"></canvas>
+ <div class="note">資料:FinMind(日K/成交金額/融資餘額,近3年;備援 TWSE)。盤中最新價=TWSE 基本市況報導(網站代理,約 5~20 秒延遲,每 30 秒更新;非交易時間顯示最近收盤)。大盤日頻本益比無公開 API,不提供。僅供研究,非投資建議。</div>
+</div>
+<div class="sec">
+ <div class="grid">
+  <div><h2>三大法人買賣超金額(近10交易日,億)</h2><div id="tbInst">載入中…</div></div>
+  <div><h2>台指期三大法人未平倉淨口數(近10交易日,大台當量)</h2><div id="tbFut">載入中…</div><div class="note">淨口數=多方未平倉−空方未平倉;負=淨空單。<b>已合併 大台TX+小台MTX÷4+微台TMF÷20(換算為大台當量口數)</b>,各契約皆含全部到期月份合計。</div></div>
+  <div><h2>台指選擇權三大法人淨未平倉餘額(各日,口)</h2><div id="tbOpt">載入中…</div><div class="note">每列=該日收盤的未平倉「存量」(買方−賣方,TXO 全契約),非五日累積。與下方期交所「前十大交易人」不同:前十大是按部位規模排名的交易人(可含自然人大戶,括號=其中特定法人),此表是按身分統計的全體外資/投信/自營商;投信在選擇權市場部位通常極小。</div></div>
+  <div><h2>前十大交易人 台指期/選擇權 未沖銷(期交所)</h2><div id="tbLT">載入中…</div><div class="note">主數字=前十大交易人合計口數;<b>( )=其中屬「特定法人」(外資機構/證券/銀行/保險/投信/期貨商等)之口數</b>,兩者差額≈進榜的自然人大戶。台指期部分為期交所原生大台當量(TX+MTX÷4+TMF÷20),與上方三大法人表同基準可直接對照。期交所僅提供「週別/近月/全部契約」,次月無公開資料,「其餘」=全部−近月推估。每晚排程更新。</div></div>
+ </div>
+</div>
+<script src="dahu_filters.js"></script>
+<script>
+var IS_FILE=(location.protocol==='file:');
+if(IS_FILE)document.getElementById('back').href='大戶線操盤台.html';
+var API=IS_FILE?'https://stephaneyen.pythonanywhere.com/api/taiex':'/api/taiex';
+function $(id){return document.getElementById(id)}
+function num(x){return parseFloat(String(x).replace(/,/g,''))}
+function fmt(n,d){return Number(n).toLocaleString('en-US',{minimumFractionDigits:d==null?2:d,maximumFractionDigits:d==null?2:d})}
+function cls(v){return v>=0?'pos':'neg'}
+function sgn(v,d){return (v>=0?'+':'')+fmt(v,d==null?0:d)}
+var TOK=(function(){try{return localStorage.getItem('fm_tok')||''}catch(e){return ''}})();
+async function jf(u,ms){var c=new AbortController();var t=setTimeout(function(){c.abort()},ms||20000);var r=await fetch(u,{signal:c.signal});clearTimeout(t);return r.json();}
+function rocIso(s){var p=String(s).split('/');return (+p[0]+1911)+'-'+p[1]+'-'+p[2];}
+
+/* ---------- 資料載入 ---------- */
+var BARS=[],MGD={},hover=-1,VIEW={s:0,n:0};
+async function loadBars(){
+ if(TOK){
+  try{
+   var sd=new Date(Date.now()-1150*864e5).toISOString().slice(0,10);
+   var j=await jf('https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=TAIEX&start_date='+sd+'&token='+TOK,25000);
+   (j.data||[]).forEach(function(r){BARS.push({d:r.date,o:r.open,h:r.max,l:r.min,c:r.close,v:(r.Trading_money||0)/1e8});});
+  }catch(e){}
+ }
+ if(BARS.length<50){
+  BARS=[];
+  $('msg').textContent='FinMind 日K不可用,改用 TWSE 備援(約20秒)…';
+  function slp(ms){return new Promise(function(r){setTimeout(r,ms)})}
+  async function tryGet(u){for(var a=0;a<2;a++){try{return await jf(u);}catch(e){await slp(1200);}}return null;}
+  var d=new Date(),jobs=[];
+  for(var i=11;i>=0;i--){var dt=new Date(d.getFullYear(),d.getMonth()-i,1);jobs.push(dt.getFullYear()+String(dt.getMonth()+1).padStart(2,'0')+'01');}
+  var vold={};
+  for(var k=0;k<jobs.length;k++){
+   var j1=await tryGet('https://www.twse.com.tw/rwd/zh/TAIEX/MI_5MINS_HIST?date='+jobs[k]+'&response=json');
+   if(j1)(j1.data||[]).forEach(function(r){BARS.push({d:rocIso(r[0]),o:num(r[1]),h:num(r[2]),l:num(r[3]),c:num(r[4]),v:null});});
+   await slp(400);
+  }
+  for(var k2=0;k2<jobs.length;k2++){
+   var j2=await tryGet('https://www.twse.com.tw/rwd/zh/afterTrading/FMTQIK?date='+jobs[k2]+'&response=json');
+   if(j2)(j2.data||[]).forEach(function(r){vold[rocIso(r[0])]=num(r[2])/1e8;});
+   await slp(400);
+  }
+  BARS.forEach(function(b){if(vold[b.d]!=null)b.v=vold[b.d];});
+  $('msg').textContent='';
+ }
+}
+async function loadMargin(){
+ if(!TOK)return;
+ try{var d=new Date(Date.now()-1150*864e5).toISOString().slice(0,10);
+  var j=await jf('https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockTotalMarginPurchaseShortSale&start_date='+d+'&token='+TOK,25000);
+  (j.data||[]).forEach(function(r){if(r.name==='MarginPurchaseMoney')MGD[r.date]=r.TodayBalance/1e8;});
+ }catch(e){}
+}
+/* ---------- 指標 ---------- */
+var IND=null;
+function calc(){
+ var n=BARS.length;
+ function ma(arr,p){var o=new Array(n).fill(null),s=0,cnt=0;for(var i=0;i<n;i++){var v=arr[i]==null?0:arr[i];s+=v;cnt++;if(i>=p){s-=(arr[i-p]==null?0:arr[i-p]);cnt--;}if(i>=p-1)o[i]=s/p;}return o;}
+ var C=BARS.map(function(b){return b.c});
+ var res={ma5:ma(C,5),ma20:ma(C,20),ma60:ma(C,60),ma120:ma(C,120),ma240:ma(C,240)};
+ var K=50,D=50;res.K=[];res.D=[];
+ for(var i=0;i<n;i++){
+  var lo=Infinity,hi=-Infinity;
+  for(var k=Math.max(0,i-8);k<=i;k++){if(BARS[k].l<lo)lo=BARS[k].l;if(BARS[k].h>hi)hi=BARS[k].h;}
+  var rsv=(hi>lo)?(C[i]-lo)/(hi-lo)*100:50;
+  K=K*2/3+rsv/3;D=D*2/3+K/3;res.K.push(K);res.D.push(D);
+ }
+ function ema(arr,p){var o=[],e=null,k2=2/(p+1);for(var i2=0;i2<arr.length;i2++){e=(e==null)?arr[i2]:arr[i2]*k2+e*(1-k2);o.push(e);}return o;}
+ var e12=ema(C,12),e26=ema(C,26);
+ res.dif=C.map(function(_,i3){return e12[i3]-e26[i3]});
+ res.macd=ema(res.dif,9);
+ res.osc=res.dif.map(function(v,i4){return v-res.macd[i4]});
+ res.vol=BARS.map(function(b){return b.v});
+ res.v5=ma(res.vol,5);res.v10=ma(res.vol,10);
+ res.mg=BARS.map(function(b){return MGD[b.d]!=null?MGD[b.d]:null});
+ return res;
+}
+/* ---------- 視窗(縮放/平移) ---------- */
+function clampView(){
+ var N=BARS.length;
+ if(VIEW.n<25)VIEW.n=25;
+ if(VIEW.n>N)VIEW.n=N;
+ if(VIEW.s<0)VIEW.s=0;
+ if(VIEW.s>N-VIEW.n)VIEW.s=N-VIEW.n;
+}
+function setRange(days){VIEW.n=Math.min(days,BARS.length);VIEW.s=BARS.length-VIEW.n;clampView();renderAll();}
+function zoom(factor,anchor){
+ var n2=Math.round(VIEW.n*factor);
+ if(anchor==null)anchor=VIEW.s+VIEW.n/2;
+ var rel=(anchor-VIEW.s)/VIEW.n;
+ VIEW.n=n2;VIEW.s=Math.round(anchor-rel*n2);
+ clampView();renderAll();
+}
+function pan(frac){VIEW.s=Math.round(VIEW.s+VIEW.n*frac);clampView();renderAll();}
+/* ---------- 繪圖 ---------- */
+var L=56,R=56;
+function setup(cv){var dpr=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;var g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);return {g:g,W:W,H:H};}
+function xAt(i,W){var cw=(W-L-R)/VIEW.n;return L+(i-VIEW.s)*cw+cw/2;}
+function grid(g,W,H,lo,hi,fd){g.strokeStyle='#1d1d1d';g.fillStyle='#777';g.font='10px sans-serif';
+ for(var k=0;k<=2;k++){var v=lo+(hi-lo)*k/2,y=H-14-(v-lo)/(hi-lo)*(H-22);g.beginPath();g.moveTo(L,y);g.lineTo(W-R,y);g.stroke();
+  g.textAlign='right';g.fillText(fmt(v,fd==null?0:fd),L-4,y+3);
+  g.textAlign='left';g.fillText(fmt(v,fd==null?0:fd),W-R+4,y+3);}}
+function yFn(H,lo,hi){return function(v){return H-14-(v-lo)/(hi-lo)*(H-22)};}
+function vline(g,W,H){if(hover<VIEW.s||hover>=VIEW.s+VIEW.n)return;var x=xAt(hover,W);g.strokeStyle='rgba(255,211,122,.55)';g.setLineDash([3,3]);g.beginPath();g.moveTo(x,2);g.lineTo(x,H-14);g.stroke();g.setLineDash([]);}
+function drawLine(g,W,arr,Y,col){g.strokeStyle=col;g.lineWidth=1.1;g.beginPath();var st=false;
+ for(var i=VIEW.s;i<VIEW.s+VIEW.n;i++){var v=arr[i];if(v==null)continue;var x=xAt(i,W),y=Y(v);if(!st){g.moveTo(x,y);st=true}else g.lineTo(x,y);}
+ g.stroke();g.lineWidth=1;}
+function drawK(){
+ var o=setup($('cvK')),g=o.g,W=o.W,H=o.H;
+ var lo=Infinity,hi=-Infinity;
+ for(var i=VIEW.s;i<VIEW.s+VIEW.n;i++){var b=BARS[i];if(b.l<lo)lo=b.l;if(b.h>hi)hi=b.h;}
+ ['ma5','ma20','ma60','ma120','ma240'].forEach(function(k){for(var i2=VIEW.s;i2<VIEW.s+VIEW.n;i2++){var v=IND[k][i2];if(v==null)continue;if(v<lo)lo=v;if(v>hi)hi=v;}});
+ var pad=(hi-lo)*.04;lo-=pad;hi+=pad;
+ grid(g,W,H,lo,hi,0);var Y=yFn(H,lo,hi),cw=(W-L-R)/VIEW.n;
+ for(var i3=VIEW.s;i3<VIEW.s+VIEW.n;i3++){var b2=BARS[i3],x=xAt(i3,W),up=b2.c>=b2.o,col=up?'#ec4a4a':'#16b981';
+  g.strokeStyle=col;g.beginPath();g.moveTo(x,Y(b2.h));g.lineTo(x,Y(b2.l));g.stroke();
+  var bw=Math.max(1.2,cw*.62),y1=Y(Math.max(b2.o,b2.c)),y2=Y(Math.min(b2.o,b2.c));
+  g.fillStyle=col;g.fillRect(x-bw/2,y1,bw,Math.max(1,y2-y1));}
+ drawLine(g,W,IND.ma5,Y,'#ffd37a');drawLine(g,W,IND.ma20,Y,'#4fd8ff');drawLine(g,W,IND.ma60,Y,'#3ef94a');drawLine(g,W,IND.ma120,Y,'#c9a0ff');drawLine(g,W,IND.ma240,Y,'#ff9f1a');
+ if(hover>=VIEW.s&&hover<VIEW.s+VIEW.n){vline(g,W,H);var y=Y(BARS[hover].c);g.strokeStyle='rgba(255,211,122,.4)';g.setLineDash([3,3]);g.beginPath();g.moveTo(L,y);g.lineTo(W-R,y);g.stroke();g.setLineDash([]);}
+ g.fillStyle='#777';g.font='10px sans-serif';g.textAlign='left';g.fillText(BARS[VIEW.s].d,L,H-3);g.textAlign='right';g.fillText(BARS[VIEW.s+VIEW.n-1].d,W-R,H-3);
+}
+function drawSub(cvId,series,fd,zero){
+ var o=setup($(cvId)),g=o.g,W=o.W,H=o.H;
+ var lo=Infinity,hi=-Infinity;
+ series.forEach(function(s){for(var i=VIEW.s;i<VIEW.s+VIEW.n;i++){var v=s.v[i];if(v==null)continue;if(v<lo)lo=v;if(v>hi)hi=v;}});
+ if(!isFinite(lo))return;
+ if(zero&&lo>0)lo=0;var pad=(hi-lo)*.08||1;lo-=pad;hi+=pad;
+ grid(g,W,H,lo,hi,fd);var Y=yFn(H,lo,hi);
+ series.forEach(function(s){
+  if(s.type==='bar'){var cw=(W-L-R)/VIEW.n,z=Y(Math.max(lo,0));
+   for(var i2=VIEW.s;i2<VIEW.s+VIEW.n;i2++){var v2=s.v[i2];if(v2==null)continue;var x=xAt(i2,W);
+    g.fillStyle=(v2>=0)?(s.cUp||'#a86'):(s.cDn||'#4a8');g.fillRect(x-Math.max(1,cw*.5)/2,Math.min(Y(v2),z),Math.max(1,cw*.5),Math.abs(Y(v2)-z)||1);}}
+  else drawLine(g,W,s.v,Y,s.c);
+ });
+ vline(g,W,H);
+}
+function renderAll(){
+ if(!BARS.length||!IND)return;
+ drawK();
+ drawSub('cvKD',[{v:IND.K,c:'#ffd37a'},{v:IND.D,c:'#4fd8ff'}],0);
+ drawSub('cvMACD',[{v:IND.osc,type:'bar',cUp:'#7a4a3a',cDn:'#2a5a4a'},{v:IND.dif,c:'#ffd37a'},{v:IND.macd,c:'#4fd8ff'}],0);
+ drawSub('cvVOL',[{v:IND.vol,type:'bar',cUp:'#5a5a72',cDn:'#5a5a72'},{v:IND.v5,c:'#ffd37a'},{v:IND.v10,c:'#4fd8ff'}],0,true);
+ drawSub('cvMG',[{v:IND.mg,c:'#ff9f1a'}],0);
+ var ib=$('infobar');
+ if(hover>=0&&hover<BARS.length){var b=BARS[hover],chg=hover>0?b.c-BARS[hover-1].c:0,pct=hover>0?chg/BARS[hover-1].c*100:0;
+  ib.innerHTML='<b>'+b.d+'</b> 開 '+fmt(b.o)+' 高 '+fmt(b.h)+' 低 '+fmt(b.l)+' 收 <b class="'+cls(chg)+'">'+fmt(b.c)+' ('+sgn(pct,2)+'%)</b>'
+   +' | 成交 '+(IND.vol[hover]!=null?fmt(IND.vol[hover],0)+'億':'—')
+   +' | K '+fmt(IND.K[hover],1)+' D '+fmt(IND.D[hover],1)
+   +' | DIF '+fmt(IND.dif[hover],1)+' MACD '+fmt(IND.macd[hover],1)
+   +' | 融資 '+(IND.mg[hover]!=null?fmt(IND.mg[hover],0)+'億':'—')
+   +'<br>'+[['ma5','#ffd37a','MA5'],['ma20','#4fd8ff','MA20'],['ma60','#3ef94a','MA60'],['ma120','#c9a0ff','MA120'],['ma240','#ff9f1a','MA240']].map(function(m){var v=IND[m[0]][hover];return '<span style="color:'+m[1]+'">'+m[2]+' '+(v==null?'—':fmt(v,0))+'</span>';}).join(' ');
+ }
+}
+/* ---------- 互動 ---------- */
+function bindHover(){
+ var drag=null;
+ ['cvK','cvKD','cvMACD','cvVOL','cvMG'].forEach(function(id){
+  var cv=$(id);
+  function idxAt(ev){var r=cv.getBoundingClientRect(),cw=(r.width-L-R)/VIEW.n;
+   var i=VIEW.s+Math.floor((ev.clientX-r.left-L)/cw);
+   if(i<VIEW.s)i=VIEW.s;if(i>=VIEW.s+VIEW.n)i=VIEW.s+VIEW.n-1;return i;}
+  cv.addEventListener('mousemove',function(ev){
+   if(drag){var r=cv.getBoundingClientRect(),cw=(r.width-L-R)/VIEW.n;
+    var db=Math.round((drag.x-ev.clientX)/cw);
+    if(db!==0){VIEW.s=drag.s+db;clampView();drag.moved=true;renderAll();}
+    return;}
+   var i=idxAt(ev);
+   if(i!==hover){hover=i;var nw=Date.now();if(!window.__rt||nw-window.__rt>25){window.__rt=nw;renderAll();}}
+  });
+  cv.addEventListener('mouseleave',function(){if(!drag){hover=-1;renderAll();}});
+  cv.addEventListener('mousedown',function(ev){drag={x:ev.clientX,s:VIEW.s,moved:false};ev.preventDefault();});
+  cv.addEventListener('wheel',function(ev){ev.preventDefault();
+   var i=idxAt(ev);zoom(ev.deltaY>0?1.2:1/1.2,i);},{passive:false});
+  cv.addEventListener('dblclick',function(){setRange(240);});
+ });
+ window.addEventListener('mouseup',function(){drag=null;});
+ $('zi').onclick=function(){zoom(1/1.35)};
+ $('zo').onclick=function(){zoom(1.35)};
+ $('pl').onclick=function(){pan(-0.3)};
+ $('pr').onclick=function(){pan(0.3)};
+ $('r3').onclick=function(){setRange(63)};
+ $('r6').onclick=function(){setRange(126)};
+ $('r12').onclick=function(){setRange(240)};
+ $('rall').onclick=function(){setRange(BARS.length)};
+}
+/* ---------- 盤中最新 ---------- */
+var lastGood=null;
+async function tickNow(){
+ var el=$('now');
+ try{
+  var j=await jf(API,12000);
+  var a=j&&j.msgArray&&j.msgArray[0];
+  if(!a)throw new Error('no msgArray');
+  var z=num(a.z);if(isNaN(z))z=num(a.b&&String(a.b).split('_')[0]);
+  if(isNaN(z)||!z)z=lastGood?lastGood.z:NaN;
+  var y=num(a.y);
+  var tm=a.t||'';
+  if(!isNaN(z)&&y){lastGood={z:z,y:y,t:tm};
+   var chg=z-y,pct=chg/y*100;
+   el.innerHTML='<b class="px">'+fmt(z)+'</b> <b class="'+cls(chg)+'">'+(chg>=0?'▲':'▼')+fmt(Math.abs(chg))+' ('+sgn(pct,2)+'%)</b> <span style="color:#9a9a9a;font-size:12px">'+(tm?tm.slice(0,5)+'(TWSE 即時,延遲數秒)':'')+'</span>';
+  }
+ }catch(e){
+  if(!lastGood&&BARS.length){var b=BARS[BARS.length-1],p=BARS.length>1?BARS[BARS.length-2].c:b.c,chg2=b.c-p;
+   el.innerHTML='<b class="px">'+fmt(b.c)+'</b> <b class="'+cls(chg2)+'">'+(chg2>=0?'▲':'▼')+fmt(Math.abs(chg2))+'</b> <span style="color:#9a9a9a;font-size:12px">收盤 '+b.d+(IS_FILE?'(盤中即時僅網站版提供)':'(即時源暫不可用)')+'</span>';}
+ }
+}
+/* ---------- 籌碼表 ---------- */
+function isoDaysAgo(n){return new Date(Date.now()-n*864e5).toISOString().slice(0,10)}
+async function loadInst(){
+ if(!TOK){$('tbInst').textContent='需 FinMind token(請先在操盤台頁存過一次)';$('tbFut').textContent='—';$('tbOpt').textContent='—';return;}
+ try{
+  var j=await jf('https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockTotalInstitutionalInvestors&start_date='+isoDaysAgo(25)+'&token='+TOK);
+  var by={};(j.data||[]).forEach(function(r){(by[r.date]=by[r.date]||{})[r.name]=(r.buy-r.sell)/1e8;});
+  var ds=Object.keys(by).sort().slice(-10).reverse();
+  var h='<table><tr><th>日期</th><th>外資</th><th>投信</th><th>自營</th><th>合計</th></tr>';
+  ds.forEach(function(d){var o=by[d];var fi=(o.Foreign_Investor||0)+(o.Foreign_Dealer_Self||0),it=o.Investment_Trust||0,dl=(o.Dealer_self||0)+(o.Dealer_Hedging||0),tt=fi+it+dl;
+   h+='<tr><td>'+d.slice(5)+'</td><td class="'+cls(fi)+'">'+sgn(fi,1)+'</td><td class="'+cls(it)+'">'+sgn(it,1)+'</td><td class="'+cls(dl)+'">'+sgn(dl,1)+'</td><td class="'+cls(tt)+'"><b>'+sgn(tt,1)+'</b></td></tr>';});
+  $('tbInst').innerHTML=h+'</table>';
+ }catch(e){$('tbInst').textContent='載入失敗';}
+ try{
+  var by2={};
+  var IDS=[['TX',1],['MTX',4],['TMF',20]];
+  for(var q=0;q<IDS.length;q++){
+   var j2=await jf('https://api.finmindtrade.com/api/v4/data?dataset=TaiwanFuturesInstitutionalInvestors&data_id='+IDS[q][0]+'&start_date='+isoDaysAgo(25)+'&token='+TOK);
+   (function(w){(j2.data||[]).forEach(function(r){var o=(by2[r.date]=by2[r.date]||{});var k=r.institutional_investors;o[k]=(o[k]||0)+(r.long_open_interest_balance_volume-r.short_open_interest_balance_volume)/w;});})(IDS[q][1]);
+  }
+  var ds2=Object.keys(by2).sort().slice(-10).reverse();
+  var h2='<table><tr><th>日期</th><th>外資</th><th>投信</th><th>自營</th><th>合計</th></tr>';
+  ds2.forEach(function(d){var o=by2[d];var fi=o['外資']||o['外資及陸資']||0,it=o['投信']||0,dl=o['自營商']||0,tt=fi+it+dl;
+   h2+='<tr><td>'+d.slice(5)+'</td><td class="'+cls(fi)+'">'+sgn(fi)+'</td><td class="'+cls(it)+'">'+sgn(it)+'</td><td class="'+cls(dl)+'">'+sgn(dl)+'</td><td class="'+cls(tt)+'"><b>'+sgn(tt)+'</b></td></tr>';});
+  $('tbFut').innerHTML=h2+'</table>';
+ }catch(e){$('tbFut').textContent='載入失敗';}
+ try{
+  var j3=await jf('https://api.finmindtrade.com/api/v4/data?dataset=TaiwanOptionInstitutionalInvestors&data_id=TXO&start_date='+isoDaysAgo(12)+'&token='+TOK);
+  var by3={};(j3.data||[]).forEach(function(r){var k=r.date+'|'+r.call_put;(by3[k]=by3[k]||{})[r.institutional_investors]=r.long_open_interest_balance_volume-r.short_open_interest_balance_volume;});
+  var days=[...new Set(Object.keys(by3).map(function(k){return k.split('|')[0]}))].sort().slice(-5).reverse();
+  var h3='<table><tr><th>日期</th><th>買權-外資</th><th>買權-投信</th><th>買權-自營</th><th>賣權-外資</th><th>賣權-投信</th><th>賣權-自營</th></tr>';
+  days.forEach(function(d){var c=by3[d+'|買權']||{},p=by3[d+'|賣權']||{};
+   function td(v){return '<td class="'+cls(v||0)+'">'+sgn(v||0)+'</td>'}
+   h3+='<tr><td>'+d.slice(5)+'</td>'+td(c['外資'])+td(c['投信'])+td(c['自營商'])+td(p['外資'])+td(p['投信'])+td(p['自營商'])+'</tr>';});
+  $('tbOpt').innerHTML=h3+'</table>';
+ }catch(e){$('tbOpt').textContent='載入失敗';}
+}
+function renderLT(){
+ var M=window.MKTLT;if(!M){$('tbLT').textContent='待夜掃更新';return;}
+ function row(lbl,a,s){var net=a[0]-a[1],nets=s[0]-s[1];
+  return '<tr><td>'+lbl+'</td><td>'+fmt(a[0],0)+'('+fmt(s[0],0)+')</td><td>'+fmt(a[1],0)+'('+fmt(s[1],0)+')</td><td class="'+cls(net)+'"><b>'+sgn(net)+'</b>('+sgn(nets)+')</td></tr>';}
+ var F=M.fut,restA=[F.allm.a10[0]-F.near.a10[0],F.allm.a10[1]-F.near.a10[1]],restS=[F.allm.s10[0]-F.near.s10[0],F.allm.s10[1]-F.near.s10[1]];
+ var h='<div style="font-size:12px;color:#9a9a9a;margin-bottom:2px">台指期(TX)前十大交易人 '+M.date+'</div>'
+  +'<table><tr><th></th><th>買方</th><th>賣方</th><th>淨部位</th></tr>'
+  +row('近月 '+(F.near.m||''),F.near.a10,F.near.s10)
+  +row('其餘契約',restA,restS)
+  +row('全部',F.allm.a10,F.allm.s10)+'</table>';
+ var O=M.opt;
+ function orow(cp,key,lbl){var o=O[cp][key];if(!o)return '';return row(lbl,o.a10,o.s10);}
+ h+='<div style="font-size:12px;color:#9a9a9a;margin:6px 0 2px">台指選擇權(TXO)前十大交易人</div>'
+  +'<table><tr><th></th><th>買方</th><th>賣方</th><th>淨部位</th></tr>'
+  +orow('call','week','買權-週別')+orow('call','near','買權-近月')+orow('call','allm','買權-全部')
+  +orow('put','week','賣權-週別')+orow('put','near','賣權-近月')+orow('put','allm','賣權-全部')+'</table>';
+ $('tbLT').innerHTML=h;
+}
+/* ---------- 啟動 ---------- */
+(async function(){
+ try{
+  tickNow();setInterval(tickNow,30000);
+  renderLT();
+  await loadBars();
+  if(!BARS.length){$('msg').textContent='日K載入失敗,請重新整理。';return;}
+  await loadMargin();
+  IND=calc();
+  VIEW.n=Math.min(240,BARS.length);VIEW.s=BARS.length-VIEW.n;
+  renderAll();bindHover();
+  window.onresize=function(){renderAll()};
+  loadInst();
+  if(!TOK)$('msg').textContent='提示:尚未偵測到 FinMind token(日K/融資/法人籌碼需要,否則走 TWSE 慢速備援)。請先在操盤台頁面的 token 欄按過「記住」。';
+ }catch(e){$('msg').textContent='初始化錯誤:'+String(e).slice(0,80);}
+})();
+</script>
+</body>
+</html>
