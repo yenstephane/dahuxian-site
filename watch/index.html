@@ -139,6 +139,10 @@
     <canvas id="chart" height="430"></canvas>
     <canvas id="xhair" height="430"></canvas>
     <div id="tip"></div>
+    <div style="font-size:11.5px;color:#9a9a9a;margin:8px 0 3px"><b>成交金額(億)</b> <span style="color:#ffd37a">5日均</span> <span style="color:#4fd8ff">10日均</span></div>
+    <canvas id="cvAMT" height="92"></canvas>
+    <div style="font-size:11.5px;color:#9a9a9a;margin:8px 0 3px"><b>KD(9,3,3)</b> <span style="color:#ffd37a">K</span> <span style="color:#4fd8ff">D</span> <span style="color:#666">(20/80 虛線)</span></div>
+    <canvas id="cvKD" height="92"></canvas>
   </div>
   <div id="legend">
     <span class="lg"><i class="ln" style="border-color:#ff9f1a"></i>階梯支撐・多方</span>
@@ -488,7 +492,7 @@ async function query(sid,sname){
  for(var i=0;i<px.length;i++){var r=px[i];var vol=+r.Trading_Volume;
   var o1=+r.open,h1=+r.max,l1=+r.min,c1=+r.close;
   if(!(vol>0)||!(o1>0)||!(h1>0)||!(l1>0)||!(c1>0))continue;
-  bars.push({d:r.date,o:o1,h:h1,l:l1,c:c1,vw:+r.Trading_money/vol});}
+  bars.push({d:r.date,o:o1,h:h1,l:l1,c:c1,vw:+r.Trading_money/vol,v:vol,m:+r.Trading_money});}
  bars.sort(function(a,b){return a.d<b.d?-1:1});
  for(var i2=0;i2<bars.length;i2++)craw[bars[i2].d]=bars[i2].c;
  var rawClose=bars[bars.length-1].c;
@@ -877,9 +881,67 @@ function drawChart(){
  var ov=$('xhair');
  ov.width=W*dpr;ov.height=H*dpr;ov.style.width=W+'px';ov.style.height=H+'px';
  GEO={W:W,H:H,padL:padL,padR:padR,padT:padT,padB:padB,cw:cw,hi:hi,lo:lo,v0:v0,v1:v1};
+ drawSubs(-1);
 }
 
 var GEO=null,dragSt=null,tcState=null;
+function subCache(){
+ if(cur._sub)return cur._sub;
+ var bs=cur.bars,n=bs.length,amt=[],K=[],D9=[],i,j;
+ for(i=0;i<n;i++)amt.push((bs[i].m||0)/1e8);
+ var k=50,d=50;
+ for(i=0;i<n;i++){var lo=Infinity,hi=-Infinity;
+  for(j=Math.max(0,i-8);j<=i;j++){if(bs[j].l<lo)lo=bs[j].l;if(bs[j].h>hi)hi=bs[j].h;}
+  var rsv=hi>lo?(bs[i].c-lo)/(hi-lo)*100:50;
+  k=k*2/3+rsv/3;d=d*2/3+k/3;K.push(k);D9.push(d);}
+ cur._sub={amt:amt,a5:smaAll(amt,5),a10:smaAll(amt,10),K:K,D:D9};
+ return cur._sub;}
+function drawSubs(hv){
+ if(!cur||!GEO)return;
+ var S=subCache(),G=GEO,dpr=window.devicePixelRatio||1;
+ function fmtA(v){return v>=100?v.toFixed(0):v>=10?v.toFixed(1):v.toFixed(2)}
+ function labels(q,W,txt,y){q.font='10px sans-serif';
+  q.fillStyle='#9a9a9a';q.textAlign='left';q.fillText(txt,W-G.padR+4,y+3);
+  var tw=q.measureText(txt).width;
+  q.fillStyle='rgba(0,0,0,.6)';q.fillRect(G.padL+1,y-6,tw+6,12);
+  q.fillStyle='#9a9a9a';q.fillText(txt,G.padL+4,y+3);}
+ function vline(q,H2){if(hv<G.v0||hv>=G.v1)return;var x=G.padL+(hv-G.v0)*G.cw+G.cw/2;
+  q.strokeStyle='rgba(255,211,122,.5)';q.setLineDash([3,3]);q.beginPath();q.moveTo(x,2);q.lineTo(x,H2-2);q.stroke();q.setLineDash([]);}
+ function panel(id,draw){var cv=$(id);if(!cv)return;var W=G.W,H2=92;
+  cv.width=W*dpr;cv.height=H2*dpr;var q=cv.getContext('2d');q.setTransform(dpr,0,0,dpr,0,0);
+  q.fillStyle='#000';q.fillRect(0,0,W,H2);draw(q,W,H2);vline(q,H2);}
+ panel('cvAMT',function(q,W,H2){
+  var mx=0,i;for(i=G.v0;i<G.v1;i++){if(S.amt[i]>mx)mx=S.amt[i];
+   if(!isNaN(S.a5[i])&&S.a5[i]>mx)mx=S.a5[i];if(!isNaN(S.a10[i])&&S.a10[i]>mx)mx=S.a10[i];}
+  mx=(mx||1)*1.08;
+  function Y2(v){return H2-5-(v/mx)*(H2-14);}
+  q.strokeStyle='#1d1d1d';
+  for(var t=1;t<=2;t++){var gv=mx*t/3,gy=Y2(gv);
+   q.beginPath();q.moveTo(G.padL,gy);q.lineTo(W-G.padR,gy);q.stroke();labels(q,W,fmtA(gv),gy);}
+  for(i=G.v0;i<G.v1;i++){var x=G.padL+(i-G.v0)*G.cw;
+   var up=cur.bars[i].c>=cur.bars[i].o;
+   q.fillStyle=up?'rgba(236,74,74,.8)':'rgba(22,185,129,.8)';
+   var bw=Math.max(1,G.cw*0.6),y=Y2(S.amt[i]);
+   q.fillRect(x+(G.cw-bw)/2,y,bw,Math.max(1,H2-5-y));}
+  function ln(arr,col){q.strokeStyle=col;q.lineWidth=1.2;q.beginPath();var on=false;
+   for(var i4=G.v0;i4<G.v1;i4++){var v=arr[i4];if(isNaN(v)){on=false;continue;}
+    var x2=G.padL+(i4-G.v0)*G.cw+G.cw/2,y2=Y2(v);
+    if(!on){q.moveTo(x2,y2);on=true;}else q.lineTo(x2,y2);}
+   q.stroke();q.lineWidth=1;}
+  ln(S.a5,'#ffd37a');ln(S.a10,'#4fd8ff');});
+ panel('cvKD',function(q,W,H2){
+  function Y3(v){return 5+(100-v)/100*(H2-14);}
+  [80,50,20].forEach(function(gv){var gy=Y3(gv);
+   q.strokeStyle=gv===50?'#1d1d1d':'#2a2a1a';
+   if(gv!==50)q.setLineDash([3,3]);
+   q.beginPath();q.moveTo(G.padL,gy);q.lineTo(W-G.padR,gy);q.stroke();q.setLineDash([]);
+   labels(q,W,String(gv),gy);});
+  function ln2(arr,col){q.strokeStyle=col;q.lineWidth=1.2;q.beginPath();var on=false;
+   for(var i5=G.v0;i5<G.v1;i5++){var x3=G.padL+(i5-G.v0)*G.cw+G.cw/2,y3=Y3(arr[i5]);
+    if(!on){q.moveTo(x3,y3);on=true;}else q.lineTo(x3,y3);}
+   q.stroke();q.lineWidth=1;}
+  ln2(S.K,'#ffd37a');ln2(S.D,'#4fd8ff');});
+}
 function xClear(){var ov=$('xhair'),og=ov.getContext('2d');og.setTransform(1,0,0,1,0,0);og.clearRect(0,0,ov.width,ov.height);$('tip').style.display='none';$('readout').textContent=' ';}
 function xhairShow(mx2,my2,isTouch){
  if(!cur||!GEO)return;
@@ -917,6 +979,11 @@ function xhairShow(mx2,my2,isTouch){
  var ro9=D.dates[xi]+'  開'+D.o[xi].toFixed(2)+' 高'+D.h[xi].toFixed(2)+' 低'+D.l[xi].toFixed(2)+' 收'+D.c[xi].toFixed(2)
   +((sOn9&&L3!=null)?('|階梯 '+L3.toFixed(2)+' 帶['+(L3-b2).toFixed(2)+'~'+(L3+b2).toFixed(2)+']'+(res.dirs[xi]===1?' 多方':' 空方')):'');
  if($('wx')&&$('wx').checked&&cur.wei){var xr9=function(v){return (v==null||isNaN(v))?'—':v.toFixed(2)};ro9+='|法人 壓1 '+xr9(cur.wei.R1[xi])+' 壓2 '+xr9(cur.wei.R2[xi])+' 支1 '+xr9(cur.wei.S1[xi])+' 支2 '+xr9(cur.wei.S2[xi]);}
+ var sb9=(typeof subCache==='function')?subCache():null;
+ if(sb9){var fa9=function(v){return v>=100?v.toFixed(0):v>=10?v.toFixed(1):v.toFixed(2)};
+  tip.innerHTML+='<br><span style="color:#bbb">額 '+fa9(sb9.amt[xi])+'億</span> <span style="color:#ffd37a">額5 '+(isNaN(sb9.a5[xi])?'—':fa9(sb9.a5[xi]))+'</span> <span style="color:#4fd8ff">額10 '+(isNaN(sb9.a10[xi])?'—':fa9(sb9.a10[xi]))+'</span> | <span style="color:#ffd37a">K '+sb9.K[xi].toFixed(1)+'</span> <span style="color:#4fd8ff">D '+sb9.D[xi].toFixed(1)+'</span>';
+  ro9+='|額 '+fa9(sb9.amt[xi])+'億 K '+sb9.K[xi].toFixed(1)+' D '+sb9.D[xi].toFixed(1);}
+ if(typeof drawSubs==='function')drawSubs(xi);
  $('readout').textContent=ro9;}
 function bindChart(){
  var cv=$('chart');
