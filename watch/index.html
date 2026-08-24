@@ -119,6 +119,7 @@
 <div id="filtpanel" style="padding:8px 16px 4px;border-bottom:1px solid #171717;background:#0b0b0b;display:none">
  <div style="font-size:12.5px;color:#c9c9c9;margin-bottom:5px"><b>★ 雙過濾網∩B多方</b> <span id="filtmeta" style="color:#777;font-size:11.5px"></span></div>
  <div id="filtgrid" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+ <div id="soutwrap" style="display:none;margin-top:7px"><div style="font-size:12px;color:#9a9a9a;margin-bottom:4px"><b>➖ 近期移出 ★</b> <span id="soutmeta" style="color:#777;font-size:11px"></span></div><div id="soutgrid" style="display:flex;flex-wrap:wrap;gap:6px"></div></div>
  <div id="fxwrap" style="display:none;margin-top:7px"><div style="font-size:12px;color:#ff7a7a;margin-bottom:4px"><b>⚠ 賣出提醒</b> <span id="fxmeta" style="color:#777;font-size:11px"></span></div><div id="fxgrid" style="display:flex;flex-wrap:wrap;gap:6px"></div></div>
  <div id="wtwrap" style="display:none;margin-top:7px"><div style="font-size:12px;color:#7ab8ff;margin-bottom:4px"><b>📋 觀察名單(週流動性輪動)</b> <span id="wtmeta" style="color:#777;font-size:11px"></span></div><div id="wtgrid" style="display:flex;flex-wrap:wrap;gap:6px"></div></div>
 </div>
@@ -1313,6 +1314,27 @@ selectStock('2330');
   else if(typeof query==='function')query(sid,nm||sid)}});
 }catch(e){}})();
 
+(function(){try{
+ var S=window.STAR_OUT;if(!S||!S.items||!S.items.length)return;
+ var w=(S.w||7),cut=new Date();cut.setDate(cut.getDate()-w);var cs=cut.toISOString().slice(0,10);
+ var it=S.items.filter(function(e){return e.d>=cs});
+ if(!it.length)return;
+ var el=document.getElementById('filtpanel'),sw=document.getElementById('soutwrap'),sg=document.getElementById('soutgrid');
+ if(!sw||!sg)return;if(el)el.style.display='block';
+ it.sort(function(a,b){return a.d<b.d?1:-1});
+ var h='';
+ it.forEach(function(e){
+  var nm=e.n||((window.VD&&VD[e.sid])?VD[e.sid][0]:e.sid);
+  var tip=(e.det||'')+(e.hold?'\uff5c'+e.hold:'');
+  h+='<span class="stk so" data-id="'+e.sid+'" data-nm="'+nm+'" title="'+tip+'" style="border:1px dashed #6a6a6a;border-radius:8px;padding:3px 9px;cursor:pointer;font-size:12.5px;background:#131313;color:#a8a8a8">'
+   +(e.src==='watch'?'<span style="color:#5a7fa8">\u25c7</span>':'')+e.sid+' '+nm+' \u30fb<b style="color:#c9a24a">'+e.why+'</b> '+e.d.slice(5).replace('-','/')+'</span>'});
+ sg.innerHTML=h;sw.style.display='block';
+ var m=document.getElementById('soutmeta');
+ if(m)m.textContent='(\u8fd1'+w+'\u5929\u81ea \u2605 \u6e05\u55ae\u79fb\u51fa\uff5c'+(S.note||'')+'\uff5c\u6ed1\u9f20\u505c\u7559\u770b\u7d30\u7bc0\uff5c\u9ede\u64ca\u958b K \u7dda)';
+ sg.querySelectorAll('.so').forEach(function(x){x.onclick=function(){var sid=x.dataset.id;
+  if(window.VD&&VD[sid]&&typeof selectStock==='function')selectStock(sid);
+  else if(typeof query==='function')query(sid,x.dataset.nm||sid)}});
+}catch(e){}})();
 (function(){var a=document.getElementById('idxBtn');if(!a)return;a.href=(location.protocol==='file:')?'大盤儀表板.html':'/market.html';a.target='_blank';})();
 </script>
 </body>
