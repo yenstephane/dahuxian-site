@@ -1285,13 +1285,15 @@ selectStock('2330');
   var ex=T.exits.filter(function(e){return e.d>=cs});
   if(ex.length){var fw=document.getElementById('fxwrap'),fg=document.getElementById('fxgrid');
    if(fw&&fg){var xh='';
-    ex.forEach(function(e){var nm=(window.VD&&VD[e.sid])?VD[e.sid][0]:e.sid;
-     xh+='<span class="stk fx" data-id="'+e.sid+'" style="border:1px solid #e05252;border-radius:8px;padding:3px 9px;cursor:pointer;font-size:12.5px;background:#1a0f0f;color:#ffb3b3">'+e.sid+' '+nm+' ・'+e.why+' '+e.d.slice(5).replace('-','/')+'</span>'});
+    ex.forEach(function(e){var nm=e.n||((window.VD&&VD[e.sid])?VD[e.sid][0]:'')||wn[e.sid]||'';
+     if(!nm){[window.GEXP,window.STAR_OUT].forEach(function(o){if(!nm&&o&&o.items)o.items.forEach(function(it){if(!nm&&it&&it.sid===e.sid&&it.n)nm=it.n})});}
+     var lb=nm?nm+' '+e.sid:e.sid;
+     xh+='<span class="stk fx" data-id="'+e.sid+'" data-nm="'+nm+'" style="border:1px solid #e05252;border-radius:8px;padding:3px 9px;cursor:pointer;font-size:12.5px;background:#1a0f0f;color:#ffb3b3">'+lb+' ・'+e.why+' '+e.d.slice(5).replace('-','/')+'</span>'});
     fg.innerHTML=xh;fw.style.display='block';
     document.getElementById('fxmeta').textContent='(近14天帶出;點擊開 K 線;僅供研究)';
     fg.querySelectorAll('.fx').forEach(function(x){x.onclick=function(){var sid=x.dataset.id;
      if(window.VD&&VD[sid]&&typeof selectStock==='function')selectStock(sid);
-     else if(typeof query==='function')query(sid,sid)}});}}}
+     else if(typeof query==='function')query(sid,x.dataset.nm||sid)}});}}}
 }catch(e){}})();
 (function(){try{
  var W=window.WATCH;if(!W||!W.items||!W.items.length)return;
