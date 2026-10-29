@@ -548,7 +548,7 @@ function vdBand(){
  if(window.DFILT){var fu=window.DFILT.fund.indexOf(cur.sid)>-1,fl=window.DFILT.flow.indexOf(cur.sid)>-1;
   t+='|選股濾網('+window.DFILT.date+'):'+(fu?'<b style="color:#3ef94a">基本面O</b>':'基本面X')+' '+(fl?'<b style="color:#3ef94a">資金流O</b>':'資金流X')+((fu&&fl)?' <b style="color:#ffd37a">★雙過</b>':'');}
  if(window.JBADGE&&window.JBADGE.m&&window.JBADGE.m[cur.sid]){var jb=window.JBADGE.m[cur.sid];
-  t+='|'+(jb[0]===1?'<b style="color:#ffb74d" title="近10日主力買賣超 +'+jb[1]+' 張、買賣家數差 '+jb[2]+'(負=集中)——雙條件成立(資料日 '+window.JBADGE.date+');研究顯示參考,非引擎訊號">\u26a1主力吸籌中</b>':'<span style="color:#777" title="雙條件未成立(資料日 '+window.JBADGE.date+'):M10='+jb[1]+' 家數10='+jb[2]+'">主力吸籌:無</span>');}
+  t+='|'+(jb[0]===1?'<b style="color:#ffb74d" title="'+(window.JBADGE.v===2?'近10日分點主力淨買超合計 +'+jb[1]+' 張(主力買超日 '+jb[2]+'/10)——條件成立':'近10日主力買賣超 +'+jb[1]+' 張、買賣家數差 '+jb[2]+'(負=集中)——雙條件成立')+'(資料日 '+window.JBADGE.date+');研究顯示參考,非引擎訊號">\u26a1主力吸籌中</b>':'<span style="color:#777" title="'+(window.JBADGE.v===2?'條件未成立(資料日 '+window.JBADGE.date+'):10日分點主力淨買超 '+jb[1]+' 張、主力買超日 '+jb[2]+'/10':'雙條件未成立(資料日 '+window.JBADGE.date+'):M10='+jb[1]+' 家數10='+jb[2])+'">主力吸籌:無</span>');}
  el.innerHTML=t;el.style.display='block';}
 
 function render(){
